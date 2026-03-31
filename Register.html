@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <style>
+body{
+    margin:0;
+    font-family: Arial;
+    background: linear-gradient(135deg,#0f172a,#1e293b);
+     background-image: url(Images/Gold_back.png);
+    background-position: center;
+    background-size: cover;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.container{
+    background: #1e293b;
+   opacity: 0.8;
+    padding:40px;
+    border-radius:15px;
+    width:350px;
+    box-shadow:0 0 30px rgba(0,0,0,0.6);
+}
+
+h2{
+    color:#facc15;
+    text-align:center;
+    margin-bottom:20px;
+}
+
+input{
+    width: 100%;
+    padding:12px;
+    margin:5px 0px;
+    border:none;
+    border-radius:8px;
+    background:#0f172a;
+    color:white;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    background:#facc15;
+    border:none;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover{
+    background:#eab308;
+}
+
+p{
+    color:#94a3b8;
+    text-align:center;
+}
+
+a{
+    color:#facc15;
+    text-decoration:none;
+}
+</style>
+</head>
+<body>
+    <div  class="container">
+    <h2>Register Form</h2>
+
+    <input type="text" placeholder="Username" id="username">
+    <small id="NameError"></small>
+    <input type="email" placeholder="Email" id="email">
+    <small id="EmailError"></small>
+    <input type="text" placeholder="Phone Number" id="phone">
+    <small id="PhoneError"></small>
+    <input type="text" placeholder="Gender" id="gender">
+    <small id="GenderError"></small>
+    <input type="password" placeholder="Password" id="password">
+    <small id="PasswordError"></small>
+
+    <button id="button">Register</button>
+
+    <a href="Login.html"><p>Already have an account?<span style="    color:#facc15;"> Login</span></p></a>
+</div>
+
+
+<script>
+let emailpatren= /^[a-zA-Z0-9.%+-]+@[gmail]+.com$/;
+let phonepatren= /^\d{10}$/;
+let genderpatren= /^(male|female)$/i;
+let passwordpatren= /^(?=.*\d).{6,}$/;
+
+let nameerror=document.getElementById("NameError");
+let emailerror=document.getElementById("EmailError");
+let phoneerror=document.getElementById("PhoneError");
+let gendererror=document.getElementById("GenderError");
+let passworderror=document.getElementById("PasswordError");
+
+let username=document.getElementById("username");
+let email=document.getElementById("email");     
+let phone=document.getElementById("phone");
+let gender=document.getElementById("gender");
+let password=document.getElementById("password");
+let button=document.getElementById("button");
+
+button.addEventListener("click",function(){
+ 
+    if(username.value==""|| email.value==""|| phone.value==""|| gender.value==""|| password.value==""){
+        nameerror.textContent="Username is required";
+        emailerror.textContent="Email is required";
+        phoneerror.textContent="Phone number is required";
+        gendererror.textContent="Gender is required";
+        passworderror.textContent="Password is required";
+}
+else if(!emailpatren.test(email.value))
+{
+    emailerror.textContent="Invalid email format";
+emailerror.style.color="red";
+
+}
+else if(!phonepatren.test(phone.value)){
+    phoneerror.textContent="Invalid phone number format";
+    phoneerror.style.color="red";}
+else if(!genderpatren.test(gender.value)){
+    gendererror.textContent="Invalid gender format";
+    gendererror.style.color="red";}
+else if(!passwordpatren.test(password.value)){
+    passworderror.textContent="Invalid password format";
+    passworderror.style.color="red";}
+
+
+
+
+
+
+
+
+else{
+let users = JSON.parse(localStorage.getItem("users")) || []      
+
+const newuser={
+ username:username.value,
+    email:email.value,  
+        phone:phone.value,
+    gender:gender.value
+    ,password:password.value
+}
+
+const exists = users.find(u => u.email === email.value);
+if (exists) {
+    alert("User with this email already exists");
+}
+else{
+
+users.push(newuser);
+localStorage.setItem("users",JSON.stringify(users));
+window.location.href = "Login.html";
+
+}
+
+
+}
+}
+);
+
+</script>
+
+</body>
+</html>
