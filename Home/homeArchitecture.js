@@ -22,7 +22,8 @@ function fetchcurrentPrice() {
   if (localStorage.getItem("currentPrice") != null) {
     let currentPriceCard = document.getElementById("currentPriceCard");
     currentPriceCard.innerText =
-      Number(localStorage.getItem("currentPrice")).toFixed(2) + " $ / oz";
+      Number(localStorage.getItem("currentPrice")).toFixed(2) +
+      " $ / oz (31.1g)";
   }
 
   console.log(localStorage.getItem("priceHistory"));
@@ -37,11 +38,17 @@ function fetchcurrentPrice() {
       changeOfPrice.style.color = "green";
       changeOfPrice.style.borderRadius = "20px";
       changeOfPrice.style.backgroundColor = "#eaf3de";
+      changeOfPrice.style.padding = "5px";
+      changeOfPrice.style.margin = "10px";
+      changeOfPrice.style.fontSize = "medium";
       changeOfPrice.innerText = "▲ " + Number(diff).toFixed(2);
     } else {
       changeOfPrice.style.color = "red";
       changeOfPrice.style.borderRadius = "20px";
       changeOfPrice.style.backgroundColor = "#f3dede";
+      changeOfPrice.style.padding = "5px";
+      changeOfPrice.style.margin = "10px";
+      changeOfPrice.style.fontSize = "medium";
       changeOfPrice.innerText = "▼ " + Number(diff).toFixed(2);
     }
   }
@@ -93,7 +100,7 @@ fetchPriceHistory();
 setInterval(fetchPriceHistory, TEN_MINUTES);
 
 function calculatedPrices() {
-  let currentPrice = Number(localStorage.getItem("currentPrice")).toFixed;
+  let currentPrice = Number(localStorage.getItem("currentPrice")).toFixed(2);
   let pricePerGram = currentPrice / 31.1035;
   let priceHistoryJO = JSON.parse(localStorage.getItem("priceHistory")).map(
     (obj) => ({
@@ -104,7 +111,7 @@ function calculatedPrices() {
 
   let result = {
     USD: {
-      current: currentPrice.toFixed(2),
+      current: currentPrice,
       priceHistory: localStorage.getItem("priceHistory"),
       per24k: pricePerGram.toFixed(2),
       per21k: (pricePerGram * (21 / 24)).toFixed(2),
@@ -114,7 +121,7 @@ function calculatedPrices() {
       english: (pricePerGram * 7.9881 * (22 / 24)).toFixed(2),
     },
     JOD: {
-      current: (currentPrice * 0.71).toFixed(2),
+      current: currentPrice * 0.71,
       priceHistory: priceHistoryJO,
       per24k: (pricePerGram * 0.71).toFixed(2),
       per21k: (pricePerGram * (21 / 24) * 0.71).toFixed(2),
@@ -124,30 +131,100 @@ function calculatedPrices() {
       english: (pricePerGram * 7.9881 * (22 / 24) * 0.71).toFixed(2),
     },
   };
+  console.log("inside calculate prices func: " + result["USD"].priceHistory);
   return result;
 }
 
-// creating the price history chart
+function fillPrices(prices, currency = "USD") {
+  let barPrice = document.getElementById("barPrice");
+  let rashadiPrice = document.getElementById("rashadiPrice");
+  let englishPrice = document.getElementById("EnglishPrice");
+  let twentyFourPrice = document.getElementById("twentyFourPrice");
+  let twentyOnePrice = document.getElementById("twentyOnePrice");
+  let eighteenPrice = document.getElementById("eighteenPrice");
+
+  barPrice.innerText = prices[currency].bar + "/ 10g";
+  rashadiPrice.innerText = prices[currency].rashadi + " / coin";
+  englishPrice.innerText = prices[currency].english + " / coin";
+  twentyFourPrice.innerText = prices[currency].per24k + " / g";
+  twentyOnePrice.innerText = prices[currency].per21k + " / g";
+  eighteenPrice.innerText = prices[currency].per18k + " / g";
+  window.historyData = JSON.parse(prices[currency].priceHistory);
+}
+fillPrices(calculatedPrices());
+console.log("after fill prices func: " + historyData);
+
+// ====================================
 const chart = echarts.init(document.getElementById("chart"));
+const sortedData = [...historyData].reverse();
+const days = sortedData.map((item) => item.day.split(" ")[0]);
+const prices = sortedData.map((item) => Number(item.max_price).toFixed(2));
 const option = {
-  title: { text: "Price Over Time" },
-  tooltip: { trigger: "axis" },
+  backgroundColor: "#2c3341",
+  title: {
+    text: "Gold Price the past 20 days",
+    textStyle: {
+      color: "#EFC227",
+      fontFamily: "Segoe UI",
+      fontSize: 14,
+    },
+  },
+  tooltip: {
+    trigger: "axis",
+    backgroundColor: "#1e2330",
+    borderColor: "#EF9F27",
+    borderWidth: 1,
+    textStyle: { color: "#f5f5f7" },
+    formatter: function (params) {
+      const p = params[0];
+      return `${p.axisValue}<br/>Price: ${p.data}`;
+    },
+  },
   xAxis: {
     type: "category",
-    data: ["Mon", "Tue", "Wed", "Thu"],
+    data: days,
+    axisLine: { lineStyle: { color: "#414450" } },
+    axisLabel: { color: "#6b7280", fontSize: 11 },
+    splitLine: { show: false },
   },
   yAxis: {
     type: "value",
+    min: function (value) {
+      return Math.floor((value.min - 200) / 100) * 100;
+    },
+    max: function (value) {
+      return Math.ceil((value.max + 200) / 100) * 100;
+    },
+    axisLine: { lineStyle: { color: "#414450" } },
+    axisLabel: { color: "#6b7280", fontSize: 11 },
+    splitLine: { lineStyle: { color: "#414450", type: "dashed" } },
   },
   series: [
     {
-      name: "Price",
+      name: "Max Price",
       type: "line",
-      data: [120, 132, 101, 134],
+      data: prices,
+      smooth: true,
+      symbol: "circle",
+      symbolSize: 6,
+      lineStyle: { color: "#EF9F27", width: 2 },
+      itemStyle: { color: "#EF9F27" },
+      areaStyle: {
+        color: {
+          type: "linear",
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
+          colorStops: [
+            { offset: 0, color: "rgba(239, 159, 39, 0.3)" },
+            { offset: 1, color: "rgba(239, 159, 39, 0)" },
+          ],
+        },
+      },
     },
   ],
 };
-
 chart.setOption(option);
 
 // modifying the currency

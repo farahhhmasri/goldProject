@@ -31,7 +31,7 @@
 
     <main>
       <section class="prices">
-        <div class="price-card-main">
+        <div class="price-card-main" id="pricecardmain">
           <h5>Live Gold Price</h5>
           <h4 id="currentPriceCard"></h4>
           <p id="changeOfPrice" class="changeOfPrice">+0.00%</p>
@@ -45,41 +45,47 @@
           <p>🟨</p>
           <h5>Gold Bar</h5>
           <hr />
-          <h4>0.00</h4>
+          <h4 id="barPrice">0.00</h4>
         </div>
+
         <div class="price-card">
           <p>🪙</p>
           <h5>Rashadi Coin</h5>
           <hr />
-          <h4>0.00</h4>
+          <h4 id="rashadiPrice">0.00</h4>
         </div>
+
         <div class="price-card">
           <p>🪙</p>
           <h5>English Coin</h5>
           <hr />
-          <h4>0.00</h4>
+          <h4 id="EnglishPrice">0.00</h4>
         </div>
+
         <div class="price-card">
           <p><i class="fa-solid fa-diamond" style="color: #ffd166"></i></p>
           <h5>24k Gold</h5>
           <hr />
-          <h4>0.00</h4>
+          <h4 id="twentyFourPrice">0.00</h4>
         </div>
+
         <div class="price-card">
           <p><i class="fa-solid fa-diamond" style="color: #ff6b35"></i></p>
           <h5>21k Gold</h5>
           <hr />
-          <h4>0.00</h4>
+          <h4 id="twentyOnePrice">0.00</h4>
         </div>
+
         <div class="price-card">
           <p><i class="fa-solid fa-diamond" style="color: #c2336e"></i></p>
           <h5>18k Gold</h5>
           <hr />
-          <h4>0.00</h4>
+          <h4 id="eighteenPrice">0.00</h4>
         </div>
       </section>
       <section id="chart" class="chart"></section>
     </main>
+
     <footer></footer>
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
     <script src="homeArchitecture.js"></script>
