@@ -1,0 +1,190 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #181b25;
+  font-family: "Segoe UI";
+  margin: 0;
+}
+
+header {
+  background-color: #2c3341;
+  color: #f5f5f7;
+  height: 90px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+}
+
+.title {
+  display: flex;
+  padding: 10px;
+  justify-content: center;
+  align-items: center;
+}
+
+header img {
+  display: block;
+  width: 120px;
+  max-width: 40vw;
+  mix-blend-mode: normal;
+  opacity: 1;
+  filter: none;
+  mask-image: radial-gradient(
+    ellipse at center,
+    black 60%,
+    rgba(0, 0, 0, 0.5) 80%,
+    transparent 95%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse at center,
+    black 60%,
+    rgba(0, 0, 0, 0.5) 80%,
+    transparent 95%
+  );
+  background-color: #2c3341;
+}
+
+header a {
+  display: inline-block;
+  font-size: smaller;
+  font-weight: bold;
+  background-color: #2c3341;
+  color: #f5f5f7;
+  padding: 10px;
+  margin-right: 5px;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease;
+}
+
+header a:hover {
+  border-color: #ef9f27;
+  transform: scale(1.05);
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.prices {
+  background-color: #2c3341;
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  margin: 10px;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+}
+
+.price-card-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 90%;
+  margin-bottom: 4px;
+  gap: 2px;
+}
+
+.price-card-main h5,
+.price-card-main h4,
+.price-card-main p {
+  margin: 0;
+  padding: 0;
+}
+
+.price-card {
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid #414450;
+  width: 150px;
+  text-align: center;
+  height: fit-content;
+  position: relative;
+  overflow: hidden;
+  padding: 10px 10px 12px;
+  gap: 4px;
+}
+
+.price-card h5,
+.price-card h4,
+.price-card p {
+  margin: 0;
+  padding: 0;
+}
+
+.price-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #ef9f27;
+  border-radius: 12px 12px 0 0;
+}
+
+.price-card:hover {
+  border-color: #ef9f27;
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease;
+  transform: scale(1.05);
+}
+
+hr {
+  border: none;
+  width: 70%;
+  border-top: 2px solid #6b7280;
+  margin: 2px auto;
+}
+
+.prices button {
+  border-radius: 10px;
+  font-size: smaller;
+  font-weight: bold;
+  background-color: #2c3341;
+  border-color: #ef9f27;
+
+  color: #f5f5f7;
+  padding: 10px;
+  margin-top: 20px;
+  margin-right: 5px;
+}
+
+.prices button:hover {
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease;
+  transform: scale(1.1);
+  background-color: #ef9f27;
+  color: #2c3341;
+}
+
+.chart {
+  background-color: #2c3341;
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  margin: 10px;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+  width: 360px;
+  height: 200px;
+}
