@@ -281,3 +281,105 @@ pricecardmain.addEventListener("click", (event) => {
     renderChart(priceHist);
   }
 });
+
+
+
+      let news = document.getElementById("news");
+
+      let savednews = JSON.parse(localStorage.getItem("news")) || [];
+      let lastFetch = parseInt(localStorage.getItem("newsTime"));
+
+      let now = Date.now();
+
+      // ⏱️ 10 minutes = 600000 ms
+      if (savednews.length > 0 && lastFetch && now - lastFetch < 600000) {
+        displayNews(savednews);
+      } else {
+        fetch(
+          "https://newsdata.io/api/1/latest?apikey=pub_8cdfe34522554af9bab8604d4a8294f9&q=economy OR politics&language=en",
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            let articles = data.results.slice(0, 4);
+
+            localStorage.setItem("news", JSON.stringify(articles));
+            localStorage.setItem("newsTime", now);
+
+            displayNews(articles);
+          })
+          .catch(() => {
+            console.log("API Error");
+
+            // fallback
+            if (savednews.length > 0) {
+              displayNews(savednews);
+            }
+          });
+      }
+
+      function displayNews(articles) {
+        news.innerHTML = ""; // clear old slides
+
+        articles.forEach((article) => {
+          let div = document.createElement("div");
+          div.classList.add("swiper-slide");
+
+          div.innerHTML = `
+            <div class="content">
+                <h3> <label class="lable"> Latest News | </label> ${article.title}</h3>
+            </div>
+        `;
+
+          // make slide clickable
+          div.addEventListener("click", () => {
+            if (article.link) {
+              window.open(article.link, "_blank");
+            }
+          });
+
+          news.appendChild(div);
+        });
+
+        new Swiper(".swiper", {
+          loop: true,
+slidesPerView: "auto",
+  spaceBetween: 50,
+  speed: 4000,
+  
+
+
+          autoplay: {
+            delay: 4000,
+            disableOnInteraction: false,
+          },
+
+          pagination: {
+            el: ".swiper-pagination",
+            clickable: true,
+          },
+
+          navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
+          },
+        });
+      }
+
+let authLink = document.getElementById("authLink");
+let user = sessionStorage.getItem("currentUser");
+
+if (user) {
+    //  مسجل دخول
+    authLink.innerText = "Logout";
+
+    authLink.addEventListener("click", (e) => {
+        e.preventDefault(); //  يمنع الانتقال
+        sessionStorage.removeItem("currentUser");
+        window.location.href = "../Login and Register Pages/Login.html";
+    });
+
+} else {
+    // مش مسجل
+    authLink.innerText = "Login";
+    authLink.href = "../Login and Register Pages/Login.html"; //  هون عادي
+}
