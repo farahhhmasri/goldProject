@@ -170,12 +170,12 @@ function fillPrices(prices, currency = "USD") {
   let twentyOnePrice = document.getElementById("twentyOnePrice");
   let eighteenPrice = document.getElementById("eighteenPrice");
 
-  barPrice.innerText = prices[currency].bar + "/ 10g";
-  rashadiPrice.innerText = prices[currency].rashadi + "";
-  englishPrice.innerText = prices[currency].english + "";
-  twentyFourPrice.innerText = prices[currency].per24k + " / g";
-  twentyOnePrice.innerText = prices[currency].per21k + " / g";
-  eighteenPrice.innerText = prices[currency].per18k + " / g";
+  barPrice.innerHTML = `${prices[currency].bar} <br><small>24 karat - 10g </small>`;
+  rashadiPrice.innerHTML = `${prices[currency].rashadi} <br> <small>21.6 karat - 7.216g</small>`;
+  englishPrice.innerHTML = `${prices[currency].english} <br><small>22 karat - 7.9881g</small>`;
+  twentyFourPrice.innerHTML = `${prices[currency].per24k} <small>/ g</small>`;
+  twentyOnePrice.innerHTML = `${prices[currency].per21k} <small>/ g</small>`;
+  eighteenPrice.innerHTML = `${prices[currency].per18k} <small>/ g</small>`;
   console.log("inside fillPrices func - works fine!");
 }
 fillPrices(calculatedPrices());
@@ -382,6 +382,26 @@ function displayNews(articles) {
       prevEl: ".swiper-button-prev",
     },
   });
+}
+
+const the_animation = document.querySelectorAll(".animation");
+const observer = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("scroll-animation");
+      } else {
+        entry.target.classList.remove("scroll-animation");
+      }
+    });
+  },
+  { threshold: 0.25 },
+);
+//
+for (let i = 0; i < the_animation.length; i++) {
+  const elements = the_animation[i];
+
+  observer.observe(elements);
 }
 
 let authLink = document.getElementById("authLink");

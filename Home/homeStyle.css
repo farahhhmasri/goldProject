@@ -27,31 +27,27 @@ header {
   display: flex;
   justify-content: center;
 }
-
 .title {
   font-family: "Bebas Neue", sans-serif;
-  text-align: left;
-  padding-left: 20px;
-  margin-bottom: 4px;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 22px;
   color: #f5e49c;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  animation: goldGlow 2.5s ease-in-out infinite;
+  border-left: 3px solid #d4af37;
+  padding-left: 10px;
+  margin-left: 15px;
+  margin-bottom: 4px;
 }
 
 .hidden-title {
   font-family: "Bebas Neue", sans-serif;
-  text-align: left;
-  padding-left: 20px;
-  margin-bottom: 4px;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 22px;
   color: #f5e49c;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  animation: goldGlow 2.5s ease-in-out infinite;
+  border-left: 3px solid #d4af37;
+  padding-left: 10px;
+  margin-bottom: 4px;
   display: none;
 }
 
@@ -182,6 +178,8 @@ main {
   width: 50px;
   height: 50px;
   border-radius: 50px;
+  border-color: #ced04e;
+  border-width: 5px;
 }
 
 .price-card2 h6,
@@ -202,6 +200,8 @@ main {
   border: 1px solid #b8b5af;
   padding: 5px;
   flex-wrap: wrap;
+  margin: 0 auto;
+  width: 90%;
 }
 
 .coins-div:hover {
@@ -210,7 +210,7 @@ main {
 
 .prices button {
   border-radius: 10px;
-  font-size: smaller;
+  font-size: small;
   font-weight: bold;
   background-color: #070505;
   border-color: #ced04e;
@@ -244,7 +244,7 @@ main {
 }
 
 table {
-  margin: 0;
+  margin: 0 auto;
   text-align: left;
   width: 100%;
   border-collapse: collapse;
@@ -297,6 +297,8 @@ table td span {
 
 .karatPrices {
   padding: 10px;
+  width: 90%;
+  margin: 0 auto;
 }
 
 .manage-your-assets {
@@ -354,7 +356,18 @@ footer {
   display: flex;
   justify-content: space-between;
   font-size: 10px;
-  padding: 5px 12px;
+  padding: 10px 20px;
+}
+.animation {
+  opacity: 0;
+  transform: translateX(-300px);
+  transition: all 0.7s ease-out;
+  transition-delay: 0.4s;
+}
+
+.scroll-animation {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .swiper {
@@ -421,6 +434,7 @@ footer {
     padding-top: 25px;
     justify-content: space-between;
     align-items: center;
+    font-size: x-large;
   }
 
   .hidden-title {
@@ -428,7 +442,10 @@ footer {
   }
 
   .price-card-main {
+    width: 80%;
     font-size: large;
+    margin-bottom: 5px;
+    margin-top: 5px;
   }
   .chart {
     width: 470px;
@@ -439,7 +456,8 @@ footer {
     padding: 0;
   }
   .coins-div {
-    width: 100%;
+    width: 90%;
+    margin-bottom: 10px;
   }
   .manage-your-assets {
     width: 100%;
@@ -460,6 +478,7 @@ footer {
     margin: 5px;
   }
   header {
+    font-size: x-large;
     height: 100px;
     padding-top: 25px;
     padding-left: 20px;
@@ -471,12 +490,16 @@ footer {
   }
 
   .price-card-main {
-    font-size: 24px;
-    width: 40%;
+    font-size: 30px;
+    width: 20%;
+    height: 400px;
+    margin-right: 0;
   }
 
   .chart {
-    width: 700px;
+    width: 850px;
+    height: 400px;
+    margin-left: 0;
   }
   .price-card2 {
     width: 30%;
@@ -485,7 +508,7 @@ footer {
   }
   .coins-div {
     font-size: large;
-    width: 80%;
+    width: 90%;
   }
   footer {
     font-size: 12px;

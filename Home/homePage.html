@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gold Prices</title>
+    <title>AURUM</title>
+    <link rel="icon" type="image/png" href="icon.png" />
     <link rel="stylesheet" href="homeStyle.css" />
     <link
       rel="stylesheet"
@@ -22,8 +23,8 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   </head>
   <body>
-    <div class="title">
-      <h2>Aurum</h2>
+    <div>
+      <h2 class="title">Aurum</h2>
     </div>
 
     <header>
@@ -54,7 +55,7 @@
 
     <main>
       <section class="prices">
-        <div class="price-card-main" id="pricecardmain">
+        <div class="price-card-main animation" id="pricecardmain">
           <h5>LIVE GOLD SPOT PRICE</h5>
           <h4 id="currentPriceCard"></h4>
           <p id="changeOfPrice" class="changeOfPrice">+0.00%</p>
@@ -75,13 +76,13 @@
           <section id="chart" class="chart"></section>
         </div>
 
-        <div class="coins-div">
+        <div class="coins-div animation">
           <div class="price-card2">
             <div>
               <img src="rashadi.png" />
             </div>
             <div>
-              <h6>Rashadi</h6>
+              <h6>Rashadi Coin</h6>
               <h5 id="rashadiPrice">0.00</h5>
             </div>
           </div>
@@ -91,7 +92,7 @@
               <img src="english.png" />
             </div>
             <div>
-              <h6>English</h6>
+              <h6>English Coin</h6>
               <h5 id="EnglishPrice">0.00</h5>
             </div>
           </div>
@@ -107,7 +108,7 @@
           </div>
         </div>
 
-        <div class="karatPrices">
+        <div class="karatPrices animation">
           <h4>GOLD PRICES</h4>
           <table>
             <tr>
@@ -135,7 +136,7 @@
         </div>
       </section>
 
-      <section class="manage-your-assets">
+      <section class="manage-your-assets animation">
         <div>
           <img src="jewelry.png" />
           <h4>Manage Your Gold Portfolio</h4>
@@ -152,6 +153,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
-    <script src="homeArchitecture.js"></script>
+    <!-- <script src="homeArchitecture.js"></script> -->
+    <script src="homeArchitecture.js?v=2"></script>
   </body>
 </html>
