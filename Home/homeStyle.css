@@ -187,3 +187,10 @@ hr {
   width: 350px;
   height: 300px;
 }
+
+.prices button.clicked {
+  background-color: rgba(239, 159, 39, 0.15);
+  color: #ef9f27;
+  border: 1px solid #ef9f27;
+  box-shadow: 0 0 8px rgba(239, 159, 39, 0.3);
+}
