@@ -375,7 +375,7 @@ footer {
   max-width: 800px;
   margin: 40px auto;
   height: 50px;
-  background-color: #303643;
+  background-color: #2c3341;
   border-radius: 18px;
   text-align: center;
 }
@@ -395,7 +395,7 @@ footer {
 
 .content {
   padding: 15px;
-  background-color: #0f172a;
+  background-color: #2c2c2c;
 }
 
 .content h3 {
