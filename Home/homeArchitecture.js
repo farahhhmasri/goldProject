@@ -1,6 +1,7 @@
 function displayDiff(newPrice, prevPrice) {
   let changeOfPrice = document.getElementById("changeOfPrice");
   let diff = newPrice - prevPrice;
+  let percent = ((diff / prevPrice) * 100).toFixed(2);
   if (diff > 0) {
     changeOfPrice.style.color = "green";
     changeOfPrice.style.borderRadius = "20px";
@@ -8,7 +9,7 @@ function displayDiff(newPrice, prevPrice) {
     changeOfPrice.style.padding = "5px";
     changeOfPrice.style.margin = "10px";
     changeOfPrice.style.fontSize = "medium";
-    changeOfPrice.innerText = "▲ " + Number(diff).toFixed(2);
+    changeOfPrice.innerText = `▲ ${percent}%  (+${Number(diff).toFixed(2)})`;
   } else {
     changeOfPrice.style.color = "red";
     changeOfPrice.style.borderRadius = "20px";
@@ -16,49 +17,70 @@ function displayDiff(newPrice, prevPrice) {
     changeOfPrice.style.padding = "5px";
     changeOfPrice.style.margin = "10px";
     changeOfPrice.style.fontSize = "medium";
-    changeOfPrice.innerText = "▼ " + Number(diff).toFixed(2);
+    changeOfPrice.innerText = `▼ ${percent}%  (${Number(diff).toFixed(2)})`;
   }
 }
+const ONE_MINUTE = 1 * 60 * 1000;
 
 function fetchcurrentPrice() {
-  // Getting current price
   let symbol = "XAU";
   let currency = "USD";
   let currentPriceAPI = `https://api.gold-api.com/price/${symbol}/${currency}`;
+  const lastFetched = localStorage.getItem("currentPriceLastFetched");
+  const now = Date.now();
+
+  if (lastFetched && now - parseInt(lastFetched) < ONE_MINUTE) {
+    console.log(
+      "Using cached current price: " + localStorage.getItem("currentPrice"),
+    );
+
+    // show cached value on screen immediately
+    if (localStorage.getItem("currentPrice") != null) {
+      let currentPriceCard = document.getElementById("currentPriceCard");
+      currentPriceCard.innerText =
+        Number(localStorage.getItem("currentPrice")).toFixed(2) +
+        " $ / oz (31.1g)";
+    }
+    if (localStorage.getItem("priceHistory") != null) {
+      let priceHist = JSON.parse(localStorage.getItem("priceHistory"));
+      let newPrice = priceHist[priceHist.length - 1]["max_price"];
+      let prevPrice = priceHist[priceHist.length - 2]["max_price"];
+      displayDiff(newPrice, prevPrice);
+    }
+    return;
+  }
+
   fetch(currentPriceAPI)
-    .then((response) => {
-      return response.json();
-    })
+    .then((response) => response.json())
     .then((data) => {
       localStorage.setItem("currentPrice", JSON.stringify(data["price"]));
       localStorage.setItem(
-        "currentPriceDate",
+        "currentPriceUpdatedAt",
         JSON.stringify(data["updatedAt"]),
       );
+      localStorage.setItem("currentPriceLastFetched", Date.now());
+
+      // show fresh value on screen after saving
+      if (localStorage.getItem("currentPrice") != null) {
+        let currentPriceCard = document.getElementById("currentPriceCard");
+        currentPriceCard.innerText =
+          Number(localStorage.getItem("currentPrice")).toFixed(2) +
+          " $ / oz (31.1g)";
+      }
+      if (localStorage.getItem("priceHistory") != null) {
+        let priceHist = JSON.parse(localStorage.getItem("priceHistory"));
+        let newPrice = priceHist[priceHist.length - 1]["max_price"];
+        let prevPrice = priceHist[priceHist.length - 2]["max_price"];
+        displayDiff(newPrice, prevPrice);
+      }
     })
     .catch((err) => {
-      console.error(
-        "Error while fetching current price - func fetchcurrentPrice " +
-          `${err}`,
-      );
+      console.error("Error while fetching current price: " + err);
     });
-
-  if (localStorage.getItem("currentPrice") != null) {
-    let currentPriceCard = document.getElementById("currentPriceCard");
-    currentPriceCard.innerText =
-      Number(localStorage.getItem("currentPrice")).toFixed(2) +
-      " $ / oz (31.1g)";
-  }
-  console.log(localStorage.getItem("priceHistory"));
-  if (localStorage.getItem("priceHistory") != null) {
-    let priceHist = JSON.parse(localStorage.getItem("priceHistory"));
-    let newPrice = priceHist[priceHist.length - 1]["max_price"];
-    let prevPrice = priceHist[priceHist.length - 2]["max_price"];
-    displayDiff(newPrice, prevPrice);
-  }
 }
+
 fetchcurrentPrice();
-setInterval(fetchcurrentPrice, 300000);
+setInterval(fetchcurrentPrice, ONE_MINUTE);
 
 const TEN_MINUTES = 10 * 60 * 1000;
 function fetchPriceHistory() {
@@ -162,14 +184,14 @@ fillPrices(calculatedPrices());
 
 // creating the chart
 const chart = echarts.init(document.getElementById("chart"));
-function renderChart(historyData) {
+function renderChart(historyData, currency = "USD") {
   const sortedData = [...historyData].reverse();
   const days = sortedData.map((item) => item.day.split(" ")[0]);
   const prices = sortedData.map((item) => Number(item.max_price).toFixed(2));
   const option = {
     backgroundColor: "#2c3341",
     title: {
-      text: "Gold Price the past 20 days",
+      text: `Gold Price the past 20 days - ${currency} / oz`,
       textStyle: {
         color: "#EFC227",
         fontFamily: "Segoe UI",
@@ -261,7 +283,7 @@ pricecardmain.addEventListener("click", (event) => {
     fillPrices(calculatedPrices(), (currency = "USD"));
 
     // recreating the chart
-    renderChart(priceHist);
+    renderChart(priceHist, "USD");
   } else if (target.name === "joCurrency") {
     joCurrency.classList.add("clicked");
     usCurrency.classList.remove("clicked");
@@ -278,6 +300,6 @@ pricecardmain.addEventListener("click", (event) => {
     fillPrices(calculatedPrices(), (currency = "JOD"));
 
     // recreating the chart
-    renderChart(priceHist);
+    renderChart(priceHist, "JOD");
   }
 });
