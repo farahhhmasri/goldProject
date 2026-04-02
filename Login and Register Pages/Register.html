@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsSHA/2.0.2/sha.js"></script>
+
     <style>
 body{
     margin:0;
@@ -17,6 +19,7 @@ body{
     justify-content:center;
     align-items:center;
 }
+
 
 .container{
     background: #1e293b;
@@ -70,13 +73,25 @@ a{
 input, button {
     width: 100%;
     padding: 12px;
-    margin: 10px 0;
+    margin: 10px 0; 
     border-radius: 8px;
     display: block;
     box-sizing: border-box;
 }
+#gender{
 
+width: 100%;
+    padding: 12px;
+    margin: 10px 0; 
+    border-radius: 8px;
+    display: block;
+    box-sizing: border-box;
+    background-color: #0f172a;
+    opacity: 0.8;
+color: gray;
+border-color: #0f172a;
 
+}
 
 @media  (max-width: 720px) {
     .container {
@@ -110,19 +125,26 @@ input, button {
     <small id="EmailError"></small>
     <input type="text" placeholder="Phone Number" id="phone">
     <small id="PhoneError"></small>
-    <input type="text" placeholder="Gender" id="gender">
+    <select id="gender" >
+        <option value="">Select Gender</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+    </select>
     <small id="GenderError"></small>
     <input type="password" placeholder="Password" id="password">
     <small id="PasswordError"></small>
 
     <button id="button">Register</button>
 
-    <a href="Login.html"><p>Already have an account?<span style="    color:#facc15;"> Login</span></p></a>
+    <a href="Login.html"><p>Already have an account?<span style="color:#facc15;"> Login</span></p></a>
 </div>
 
 
 <script>
-let emailpatren= /^[a-zA-Z0-9.%+-]+@[gmail]+.com$/;
+ 
+
+
+let emailpatren= /^[a-zA-Z0-9.%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 let phonepatren= /^\d{10}$/;
 let genderpatren= /^(male|female)$/i;
 let passwordpatren= /^(?=.*\d).{6,}$/;
@@ -151,8 +173,8 @@ button.addEventListener("click",function(){
 }
 else if(!emailpatren.test(email.value))
 {
-    emailerror.textContent="Invalid email format";
-emailerror.style.color="red";
+     emailerror.textContent="Invalid email format";
+     emailerror.style.color="red";
 
 }
 else if(!phonepatren.test(phone.value)){
@@ -180,7 +202,8 @@ const newuser={
     email:email.value,  
         phone:phone.value,
     gender:gender.value
-    ,password:password.value
+    ,  password: hashPassword(password.value) 
+
 }
 
 const exists = users.find(u => u.email === email.value);
@@ -200,7 +223,16 @@ window.location.href = "Login.html";
 }
 );
 
-</script>
+
+
+function hashPassword(password) {
+    const shaObj = new jsSHA("SHA-256", "TEXT", { encoding: "UTF8" });
+    shaObj.update(password);
+    return shaObj.getHash("HEX");
+}
+
+    </script>
+
 
 </body>
 </html>
