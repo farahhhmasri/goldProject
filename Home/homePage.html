@@ -13,32 +13,36 @@
       referrerpolicy="no-referrer"
     />
 
-<link
+    <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"
     />
 
     <!-- Swiper JS -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-
   </head>
   <body>
+    <div class="title">
+      <h2>Aurum</h2>
+    </div>
     <header>
-      <div class="title">
-        <i
-          class="fa-solid fa-coins"
-          style="color: gold; padding-right: 5px"
-        ></i>
-        <h2>Logo</h2>
-      </div>
-      <div>
+      <div class="nav-bar">
+        <a name="home" value="home" href="#" class="active">Home</a>
+        <p>|</p>
         <a name="myAssets" value="myAssets" href="#">My Assets</a>
-<a id="authLink" href=""></a>  
-      <a name="signup" value="signup" href="../Login and Register Pages/Register.html">Sign Up</a>
+        <p>|</p>
+        <a id="authLink" href=""></a>
+        <p>|</p>
+        <a
+          name="signup"
+          value="signup"
+          href="../Login and Register Pages/Register.html"
+          >Sign Up</a
+        >
       </div>
     </header>
 
-<div class="swiper">
+    <div class="swiper">
       <div class="swiper-wrapper" id="news"></div>
 
       <div class="swiper-button-next"></div>
@@ -46,12 +50,10 @@
       <div class="swiper-pagination"></div>
     </div>
 
-
-
     <main>
       <section class="prices">
         <div class="price-card-main" id="pricecardmain">
-          <h5>Live Gold Price</h5>
+          <h5>LIVE GOLD SPOT PRICE</h5>
           <h4 id="currentPriceCard"></h4>
           <p id="changeOfPrice" class="changeOfPrice">+0.00%</p>
           <div>
@@ -67,27 +69,69 @@
           </div>
         </div>
 
-        <div class="price-card">
-          <p>🟨</p>
-          <h5>Gold Bar</h5>
-          <hr />
-          <h4 id="barPrice">0.00</h4>
+        <div>
+          <section id="chart" class="chart"></section>
         </div>
 
-        <div class="price-card">
-          <p>🪙</p>
-          <h5>Rashadi Coin</h5>
-          <hr />
-          <h4 id="rashadiPrice">0.00</h4>
+        <div class="coins-div">
+          <div class="price-card2">
+            <div>
+              <img src="rashadi.png" />
+            </div>
+            <div>
+              <h6>Rashadi</h6>
+              <h5 id="rashadiPrice">0.00</h5>
+            </div>
+          </div>
+
+          <div class="price-card2">
+            <div>
+              <img src="english.png" />
+            </div>
+            <div>
+              <h6>English</h6>
+              <h5 id="EnglishPrice">0.00</h5>
+            </div>
+          </div>
+
+          <div class="price-card2">
+            <div>
+              <img src="bar.png" />
+            </div>
+            <div>
+              <h6>Gold Bar</h6>
+              <h5 id="barPrice">0.00</h5>
+            </div>
+          </div>
         </div>
 
-        <div class="price-card">
-          <p>🪙</p>
-          <h5>English Coin</h5>
-          <hr />
-          <h4 id="EnglishPrice">0.00</h4>
+        <div class="karatPrices">
+          <h4>GOLD PRICES</h4>
+          <table>
+            <tr>
+              <td>
+                <i class="fa-solid fa-diamond" style="color: #ffd166"></i>
+                <span>24K</span> GOLD
+              </td>
+              <td id="twentyFourPrice">0.00</td>
+            </tr>
+            <tr>
+              <td>
+                <i class="fa-solid fa-diamond" style="color: #ff6b35"></i>
+                <span>21K</span> GOLD
+              </td>
+              <td id="twentyOnePrice">0.00</td>
+            </tr>
+            <tr>
+              <td>
+                <i class="fa-solid fa-diamond" style="color: #c2336e"></i>
+                <span>18K</span> GOLD
+              </td>
+              <td id="eighteenPrice">0.00</td>
+            </tr>
+          </table>
         </div>
-
+        <!-- 
         <div class="price-card">
           <p><i class="fa-solid fa-diamond" style="color: #ffd166"></i></p>
           <h5>24k Gold</h5>
@@ -107,12 +151,23 @@
           <h5>18k Gold</h5>
           <hr />
           <h4 id="eighteenPrice">0.00</h4>
+        </div> -->
+
+        <div class="manage-your-assets">
+          <img src="jewelry.png" />
+          <h4>Manage Your Gold Portfolio</h4>
+          <small>Add you own jewelry, bars and coins.</small>
+          <small>Watch your profit grow in real time!</small> <br />
+          <button name="myAssets" value="myAssets" href="#">Add Assets</button>
         </div>
       </section>
-      <section id="chart" class="chart"></section>
     </main>
 
-    <footer></footer>
+    <footer>
+      <span>AURUM</span>
+      <span>LIVE PRICES UPDATED EVERY MINUTE</span>
+    </footer>
+
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
     <script src="homeArchitecture.js"></script>
   </body>

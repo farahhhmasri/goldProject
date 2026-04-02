@@ -37,9 +37,9 @@ function fetchcurrentPrice() {
     // show cached value on screen immediately
     if (localStorage.getItem("currentPrice") != null) {
       let currentPriceCard = document.getElementById("currentPriceCard");
-      currentPriceCard.innerText =
-        Number(localStorage.getItem("currentPrice")).toFixed(2) +
-        " $ / oz (31.1g)";
+      currentPriceCard.style.color = "#ced04e";
+      currentPriceCard.style.fontSize = "2.4rem";
+      currentPriceCard.innerHTML = `${Number(localStorage.getItem("currentPrice")).toFixed(2)} <small> $ / oz (31.1g)</small>`;
     }
     if (localStorage.getItem("priceHistory") != null) {
       let priceHist = JSON.parse(localStorage.getItem("priceHistory"));
@@ -63,9 +63,7 @@ function fetchcurrentPrice() {
       // show fresh value on screen after saving
       if (localStorage.getItem("currentPrice") != null) {
         let currentPriceCard = document.getElementById("currentPriceCard");
-        currentPriceCard.innerText =
-          Number(localStorage.getItem("currentPrice")).toFixed(2) +
-          " $ / oz (31.1g)";
+        currentPriceCard.innerHTML = `${Number(localStorage.getItem("currentPrice")).toFixed(2)}<small> $ / oz (31.1g)</small>`;
       }
       if (localStorage.getItem("priceHistory") != null) {
         let priceHist = JSON.parse(localStorage.getItem("priceHistory"));
@@ -173,8 +171,8 @@ function fillPrices(prices, currency = "USD") {
   let eighteenPrice = document.getElementById("eighteenPrice");
 
   barPrice.innerText = prices[currency].bar + "/ 10g";
-  rashadiPrice.innerText = prices[currency].rashadi + " / coin";
-  englishPrice.innerText = prices[currency].english + " / coin";
+  rashadiPrice.innerText = prices[currency].rashadi + "";
+  englishPrice.innerText = prices[currency].english + "";
   twentyFourPrice.innerText = prices[currency].per24k + " / g";
   twentyOnePrice.innerText = prices[currency].per21k + " / g";
   eighteenPrice.innerText = prices[currency].per18k + " / g";
@@ -186,14 +184,17 @@ fillPrices(calculatedPrices());
 const chart = echarts.init(document.getElementById("chart"));
 function renderChart(historyData, currency = "USD") {
   const sortedData = [...historyData].reverse();
-  const days = sortedData.map((item) => item.day.split(" ")[0]);
+  const days = sortedData.map((item) => {
+    const date = new Date(item.day);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  });
   const prices = sortedData.map((item) => Number(item.max_price).toFixed(2));
   const option = {
-    backgroundColor: "#2c3341",
+    backgroundColor: "#070505",
     title: {
-      text: `Gold Price the past 20 days - ${currency} / oz`,
+      text: `Prices the past 20 days - ${currency}/oz`,
       textStyle: {
-        color: "#EFC227",
+        color: "#ced04f",
         fontFamily: "Segoe UI",
         fontSize: 14,
       },
@@ -201,7 +202,7 @@ function renderChart(historyData, currency = "USD") {
     tooltip: {
       trigger: "axis",
       backgroundColor: "#1e2330",
-      borderColor: "#EF9F27",
+      borderColor: "#b8b5af",
       borderWidth: 1,
       textStyle: { color: "#f5f5f7" },
       formatter: function (params) {
@@ -236,8 +237,8 @@ function renderChart(historyData, currency = "USD") {
         smooth: true,
         symbol: "circle",
         symbolSize: 6,
-        lineStyle: { color: "#EF9F27", width: 2 },
-        itemStyle: { color: "#EF9F27" },
+        lineStyle: { color: "#ced04f", width: 2 },
+        itemStyle: { color: "#ced04f" },
         areaStyle: {
           color: {
             type: "linear",
@@ -271,7 +272,7 @@ pricecardmain.addEventListener("click", (event) => {
     usCurrency.classList.add("clicked");
     joCurrency.classList.remove("clicked");
     //changing current price
-    currentPriceCard.innerText = result["USD"].current + " / oz";
+    currentPriceCard.innerHTML = `${result["USD"].current} <small> / oz (31.1g)</small>`;
 
     // changing price difference
     let priceHist = result["USD"].priceHistory;
@@ -288,7 +289,7 @@ pricecardmain.addEventListener("click", (event) => {
     joCurrency.classList.add("clicked");
     usCurrency.classList.remove("clicked");
     //changing current price
-    currentPriceCard.innerText = result["JOD"].current + " / oz";
+    currentPriceCard.innerHTML = `${result["JOD"].current} <small> / oz (31.1g)</small>`;
 
     // changing price difference
     let priceHist = result["JOD"].priceHistory;
@@ -304,104 +305,99 @@ pricecardmain.addEventListener("click", (event) => {
   }
 });
 
+let news = document.getElementById("news");
 
+let savednews = JSON.parse(localStorage.getItem("news")) || [];
+let lastFetch = parseInt(localStorage.getItem("newsTime"));
 
-      let news = document.getElementById("news");
+let now = Date.now();
 
-      let savednews = JSON.parse(localStorage.getItem("news")) || [];
-      let lastFetch = parseInt(localStorage.getItem("newsTime"));
+// ⏱️ 10 minutes = 600000 ms
+if (savednews.length > 0 && lastFetch && now - lastFetch < 600000) {
+  displayNews(savednews);
+} else {
+  fetch(
+    "https://newsdata.io/api/1/latest?apikey=pub_8cdfe34522554af9bab8604d4a8294f9&q=economy OR politics&language=en",
+  )
+    .then((res) => res.json())
+    .then((data) => {
+      let articles = data.results.slice(0, 4);
 
-      let now = Date.now();
+      localStorage.setItem("news", JSON.stringify(articles));
+      localStorage.setItem("newsTime", now);
 
-      // ⏱️ 10 minutes = 600000 ms
-      if (savednews.length > 0 && lastFetch && now - lastFetch < 600000) {
+      displayNews(articles);
+    })
+    .catch(() => {
+      console.log("API Error");
+
+      // fallback
+      if (savednews.length > 0) {
         displayNews(savednews);
-      } else {
-        fetch(
-          "https://newsdata.io/api/1/latest?apikey=pub_8cdfe34522554af9bab8604d4a8294f9&q=economy OR politics&language=en",
-        )
-          .then((res) => res.json())
-          .then((data) => {
-            let articles = data.results.slice(0, 4);
-
-            localStorage.setItem("news", JSON.stringify(articles));
-            localStorage.setItem("newsTime", now);
-
-            displayNews(articles);
-          })
-          .catch(() => {
-            console.log("API Error");
-
-            // fallback
-            if (savednews.length > 0) {
-              displayNews(savednews);
-            }
-          });
       }
+    });
+}
 
-      function displayNews(articles) {
-        news.innerHTML = ""; // clear old slides
+function displayNews(articles) {
+  news.innerHTML = ""; // clear old slides
 
-        articles.forEach((article) => {
-          let div = document.createElement("div");
-          div.classList.add("swiper-slide");
+  articles.forEach((article) => {
+    let div = document.createElement("div");
+    div.classList.add("swiper-slide");
 
-          div.innerHTML = `
+    div.innerHTML = `
             <div class="content">
                 <h3> <label class="lable"> Latest News | </label> ${article.title}</h3>
             </div>
         `;
 
-          // make slide clickable
-          div.addEventListener("click", () => {
-            if (article.link) {
-              window.open(article.link, "_blank");
-            }
-          });
-
-          news.appendChild(div);
-        });
-
-        new Swiper(".swiper", {
-          loop: true,
-slidesPerView: "auto",
-  spaceBetween: 50,
-  speed: 4000,
-  
-
-
-          autoplay: {
-            delay: 4000,
-            disableOnInteraction: false,
-          },
-
-          pagination: {
-            el: ".swiper-pagination",
-            clickable: true,
-          },
-
-          navigation: {
-            nextEl: ".swiper-button-next",
-            prevEl: ".swiper-button-prev",
-          },
-        });
+    // make slide clickable
+    div.addEventListener("click", () => {
+      if (article.link) {
+        window.open(article.link, "_blank");
       }
+    });
+
+    news.appendChild(div);
+  });
+
+  new Swiper(".swiper", {
+    loop: true,
+    slidesPerView: "auto",
+    spaceBetween: 50,
+    speed: 4000,
+
+    autoplay: {
+      delay: 4000,
+      disableOnInteraction: false,
+    },
+
+    pagination: {
+      el: ".swiper-pagination",
+      clickable: true,
+    },
+
+    navigation: {
+      nextEl: ".swiper-button-next",
+      prevEl: ".swiper-button-prev",
+    },
+  });
+}
 
 let authLink = document.getElementById("authLink");
 let user = sessionStorage.getItem("currentUser");
 
 if (user) {
-    //  مسجل دخول
-    authLink.innerText = "Logout";
+  //  مسجل دخول
+  authLink.innerText = "Logout";
 
-    authLink.addEventListener("click", (e) => {
-        e.preventDefault(); //  يمنع الانتقال
-        sessionStorage.removeItem("currentUser");
-        window.location.href = "../Login and Register Pages/Login.html";
-    });
-
+  authLink.addEventListener("click", (e) => {
+    e.preventDefault(); //  يمنع الانتقال
+    sessionStorage.removeItem("currentUser");
+    window.location.href = "../Login and Register Pages/Login.html";
+  });
 } else {
-    // مش مسجل
-    authLink.innerText = "Login";
-    authLink.href = "../Login and Register Pages/Login.html"; //  هون عادي
+  // مش مسجل
+  authLink.innerText = "Login";
+  authLink.href = "../Login and Register Pages/Login.html"; //  هون عادي
 }
