@@ -32,16 +32,18 @@
       <div class="nav-bar">
         <a name="home" value="home" href="#" class="active">Home</a>
         <p>|</p>
-        <a name="myAssets" value="myAssets" href="../Asset/asset.html">My Assets</a>
+        <a name="myAssets" value="myAssets" href="../Asset/asset.html"
+          >My Assets</a
+        >
         <p>|</p>
         <a id="authLink" href=""></a>
-        <p>|</p>
-        <a
+        <!-- <p>|</p> -->
+        <!-- <a
           name="signup"
           value="signup"
           href="../Login and Register Pages/Register.html"
           >Sign Up</a
-        >
+        > -->
       </div>
     </header>
 
@@ -142,7 +144,13 @@
           <h4>Manage Your Gold Portfolio</h4>
           <small>Add you own jewelry, bars and coins.</small><br />
           <small>Watch your profit grow in real time!</small> <br />
-          <button name="myAssets" value="myAssets" onclick="window.location.href='../Asset/asset.html'">Add Assets</button>
+          <button
+            name="myAssets"
+            value="myAssets"
+            onclick="window.location.href = '../Asset/asset.html'"
+          >
+            Add Assets
+          </button>
         </div>
       </section>
     </main>
