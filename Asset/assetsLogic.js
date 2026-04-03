@@ -1,3 +1,8 @@
+let user=sessionStorage.getItem('currentUser');
+if(!user){
+    window.location.href = '../Login and Register Pages/Login.html';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const tableBody = document.getElementById('assets-table-body');
     const totalProfitVal = document.getElementById('total-profit-value');
