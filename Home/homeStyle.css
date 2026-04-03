@@ -393,6 +393,20 @@ footer {
   cursor: pointer;
 }
 
+
+.swiper-button-next,
+.swiper-button-prev {
+  color: #facc15;
+}
+
+.swiper-button-next::after,
+.swiper-button-prev::after {
+  font-size: 18px !important; 
+  font-weight: bold;
+    color: #facc15;
+
+}
+
 .content {
   padding: 15px;
   background-color: #2c2c2c;
