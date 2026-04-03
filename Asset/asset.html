@@ -32,7 +32,7 @@
                 <a href="#" class="nav-link"><i class="bi bi-bell me-2"></i> Notifications</a>
                 
                 <div class="logout-section">
-                    <a href="../Login and Register Pages/Login.html" id="logoutBtn" class="nav-link text-danger opacity-75">
+                    <a href="../Login and Register Pages/Login.html" id="logoutBtn" class="nav-link text-danger opacity-75"   >
                         <i class="bi bi-box-arrow-right me-2"></i> Logout
                     </a>
                 </div>
@@ -41,7 +41,7 @@
 
         <main class="flex-grow-1 p-0">
             <nav class="navbar px-4 py-2 sticky-top custom-nav">
-                <h5 class="fw-bold m-0 main-title">My Assets</h5>
+               <a href="../Home/homePage.html" class="myassetsW"> <h5 class="fw-bold m-0 main-title">My Assets</h5></a>
                 <div class="ms-auto d-flex align-items-center">
                     <div class="input-group search-box me-3 d-none d-md-flex">
                         <span class="input-group-text bg-transparent border-0 text-secondary"><i class="bi bi-search"></i></span>
@@ -50,6 +50,14 @@
                     <div class="d-flex gap-3 text-secondary icon-actions">
                         <i class="bi bi-gear cursor-pointer"></i>
                         <i class="bi bi-bell cursor-pointer"></i>
+
+ <a href="../Login and Register Pages/Login.html" 
+       id="logoutBtnMobile" 
+       class="btn btn-sm btn-outline-danger d-md-none">
+        Logout
+    </a>
+
+
                     </div>
                 </div>
             </nav>
@@ -148,6 +156,14 @@
                             <label class="form-label small">Purchase Date</label>
                             <input type="date" class="form-control bg-black text-white border-secondary" id="assetDate" required>
                         </div>
+<div>
+<label class="form-label small">Images</label>
+<input type="file" id="imageInput" accept="image/*">
+</div>
+
+
+
+
                         <button type="submit" class="btn btn-warning w-100 rounded-pill fw-bold py-2 mt-3">Save to Vault</button>
                     </form>
                 </div>

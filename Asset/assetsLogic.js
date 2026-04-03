@@ -44,7 +44,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <tr>
                     <td>
                         <div class="d-flex align-items-center">
-                            <div class="p-2 bg-dark rounded-3 me-3"><i class="bi bi-gem text-warning"></i></div>
+                            <div class="p-2 bg-dark rounded-3 me-3"> ${
+        asset.image 
+        ? `<img src="${asset.image}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">`
+        : `<i class="bi bi-gem text-warning"></i>`
+    }</i></div>
                             <div>
                                 <p class="mb-0 fw-bold">${asset.category}</p>
                                 <small class="text-secondary">${asset.type}</small>
@@ -101,24 +105,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- ADD ASSET LOGIC ---
     assetForm.addEventListener('submit', (e) => {
-        e.preventDefault();
+    e.preventDefault();
+
+    let imageInput = document.getElementById("imageInput");
+    let file = imageInput.files[0];
+
+    let reader = new FileReader();
+
+    reader.onload = function () {
         const newAsset = {
             type: document.getElementById('assetType').value,
             category: document.getElementById('assetCategory').value,
             karat: document.getElementById('assetKarat').value,
             weight: document.getElementById('assetWeight').value,
             price: document.getElementById('assetPrice').value,
-            date: document.getElementById('assetDate').value
+            date: document.getElementById('assetDate').value,
+            image: reader.result // ✅ الصورة
         };
-        
+
         myAssets.push(newAsset);
         localStorage.setItem('userGoldAssets', JSON.stringify(myAssets));
-        
+
         const modalInstance = bootstrap.Modal.getInstance(document.getElementById('addAssetModal'));
         modalInstance.hide();
         assetForm.reset();
         renderAssets();
-    });
+    };
+
+    if (file) {
+        reader.readAsDataURL(file);
+    } else {
+        alert("اختار صورة 😅");
+    }
+});
 
     window.addEventListener('storage', (e) => {
         if (e.key === 'currentPrice') renderAssets();
@@ -127,3 +146,33 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAssets();
     setInterval(renderAssets, 5000); 
 });
+
+
+
+
+function compressImage(file, callback) {
+    let reader = new FileReader();
+
+    reader.onload = function (event) {
+        let img = new Image();
+        img.src = event.target.result;
+
+        img.onload = function () {
+            let canvas = document.createElement("canvas");
+            let ctx = canvas.getContext("2d");
+
+            let maxWidth = 300; // 👈 حجم مناسب
+            let scale = maxWidth / img.width;
+
+            canvas.width = maxWidth;
+            canvas.height = img.height * scale;
+
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            let compressedBase64 = canvas.toDataURL("image/jpeg", 0.6); // 👈 ضغط
+            callback(compressedBase64);
+        };
+    };
+
+    reader.readAsDataURL(file);
+}

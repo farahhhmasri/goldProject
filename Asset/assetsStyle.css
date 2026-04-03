@@ -95,11 +95,21 @@ main {
 .stat-value.profit-pos { color: #2ecc71; }
 .stat-value.profit-neg { color: #e63946; }
 
+
+
+  
+
 /* Mobile Compatibility */
 @media (max-width: 768px) {
     #sidebar-wrapper { transform: translateX(-100%); display: none; }
     main { margin-left: 0; width: 100%; }
 }
+
+
+.logout-section {
+    display: none;
+  }
+
 
 /* Container for the Modal */
 #deleteConfirmModal .modal-content {
@@ -108,6 +118,15 @@ main {
     border-radius: 20px;       /* Smooth rounded corners */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
+
+
+.logout-section {
+    display: block;
+    margin-top: 20px;
+  }
+
+
+
 
 /* The Warning Icon Wrapper */
 .text-danger i {
@@ -170,3 +189,7 @@ main {
 .modal.show .modal-dialog {
     transform: scale(1);
 }
+
+
+.myassetsW{color: white;
+text-decoration: none;}
