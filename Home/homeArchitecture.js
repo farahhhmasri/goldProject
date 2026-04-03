@@ -31,15 +31,28 @@ function fetchcurrentPrice() {
 
   if (lastFetched && now - parseInt(lastFetched) < ONE_MINUTE) {
     console.log(
-      "Using cached current price: " + localStorage.getItem("currentPrice"),
+      "Using cached current price: " +
+        Date(localStorage.getItem("currentPrice")),
     );
 
     // show cached value on screen immediately
     if (localStorage.getItem("currentPrice") != null) {
+      const elapsed =
+        Date.now() - parseInt(localStorage.getItem("currentPriceLastFetched"));
+      const seconds = Math.floor(elapsed / 1000);
+      const minutes = Math.floor(seconds / 60);
+
+      const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+      const timeAgo =
+        seconds < 60
+          ? rtf.format(-seconds, "second")
+          : rtf.format(-minutes, "minute");
       let currentPriceCard = document.getElementById("currentPriceCard");
       currentPriceCard.style.color = "#ced04e";
       currentPriceCard.style.fontSize = "2.4rem";
-      currentPriceCard.innerHTML = `${Number(localStorage.getItem("currentPrice")).toFixed(2)} <small> $ / oz (31.1g)</small>`;
+      currentPriceCard.innerHTML =
+        `${Number(localStorage.getItem("currentPrice")).toFixed(2)} <small> $ / oz (31.1g)</small>` +
+        `<br><small>Last Updated ${timeAgo}</small>`;
     }
     if (localStorage.getItem("priceHistory") != null) {
       let priceHist = JSON.parse(localStorage.getItem("priceHistory"));
@@ -62,8 +75,22 @@ function fetchcurrentPrice() {
 
       // show fresh value on screen after saving
       if (localStorage.getItem("currentPrice") != null) {
+        const elapsed =
+          Date.now() -
+          parseInt(localStorage.getItem("currentPriceLastFetched"));
+        const seconds = Math.floor(elapsed / 1000);
+        const minutes = Math.floor(seconds / 60);
+
+        const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+        const timeAgo =
+          seconds < 60
+            ? rtf.format(-seconds, "second")
+            : rtf.format(-minutes, "minute");
+
         let currentPriceCard = document.getElementById("currentPriceCard");
-        currentPriceCard.innerHTML = `${Number(localStorage.getItem("currentPrice")).toFixed(2)}<small> $ / oz (31.1g)</small>`;
+        currentPriceCard.innerHTML =
+          `${Number(localStorage.getItem("currentPrice")).toFixed(2)}<small> $ / oz (31.1g)</small>` +
+          `<br><small>Last Updated ${timeAgo}</small>`;
       }
       if (localStorage.getItem("priceHistory") != null) {
         let priceHist = JSON.parse(localStorage.getItem("priceHistory"));
@@ -272,7 +299,19 @@ pricecardmain.addEventListener("click", (event) => {
     usCurrency.classList.add("clicked");
     joCurrency.classList.remove("clicked");
     //changing current price
-    currentPriceCard.innerHTML = `${result["USD"].current} <small> / oz (31.1g)</small>`;
+    const elapsed =
+      Date.now() - parseInt(localStorage.getItem("currentPriceLastFetched"));
+    const seconds = Math.floor(elapsed / 1000);
+    const minutes = Math.floor(seconds / 60);
+
+    const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+    const timeAgo =
+      seconds < 60
+        ? rtf.format(-seconds, "second")
+        : rtf.format(-minutes, "minute");
+    currentPriceCard.innerHTML =
+      `${result["USD"].current} <small> / oz (31.1g)</small>` +
+      `<br><small>Last Updated ${timeAgo}</small>`;
 
     // changing price difference
     let priceHist = result["USD"].priceHistory;
@@ -289,7 +328,20 @@ pricecardmain.addEventListener("click", (event) => {
     joCurrency.classList.add("clicked");
     usCurrency.classList.remove("clicked");
     //changing current price
-    currentPriceCard.innerHTML = `${result["JOD"].current} <small> / oz (31.1g)</small>`;
+    const elapsed =
+      Date.now() - parseInt(localStorage.getItem("currentPriceLastFetched"));
+    const seconds = Math.floor(elapsed / 1000);
+    const minutes = Math.floor(seconds / 60);
+
+    const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+    const timeAgo =
+      seconds < 60
+        ? rtf.format(-seconds, "second")
+        : rtf.format(-minutes, "minute");
+
+    currentPriceCard.innerHTML =
+      `${result["JOD"].current} <small> / oz (31.1g)</small>` +
+      `<br><small>Last Updated ${timeAgo}</small>`;
 
     // changing price difference
     let priceHist = result["JOD"].priceHistory;
