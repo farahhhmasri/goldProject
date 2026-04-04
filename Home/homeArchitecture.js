@@ -1,8 +1,10 @@
+// show the difference between todya's price and yesterday's
 function displayDiff(newPrice, prevPrice) {
   let changeOfPrice = document.getElementById("changeOfPrice");
   let diff = newPrice - prevPrice;
   let percent = ((diff / prevPrice) * 100).toFixed(2);
   if (diff > 0) {
+    // green if it went up
     changeOfPrice.style.color = "green";
     changeOfPrice.style.borderRadius = "20px";
     changeOfPrice.style.backgroundColor = "#eaf3de";
@@ -11,6 +13,7 @@ function displayDiff(newPrice, prevPrice) {
     changeOfPrice.style.fontSize = "medium";
     changeOfPrice.innerText = `▲ ${percent}%  (+${Number(diff).toFixed(2)})`;
   } else {
+    // red if it went down
     changeOfPrice.style.color = "red";
     changeOfPrice.style.borderRadius = "20px";
     changeOfPrice.style.backgroundColor = "#f3dede";
@@ -20,8 +23,9 @@ function displayDiff(newPrice, prevPrice) {
     changeOfPrice.innerText = `▼ ${percent}%  (${Number(diff).toFixed(2)})`;
   }
 }
-const ONE_MINUTE = 1 * 60 * 1000;
 
+// fetch live current price every minute
+const ONE_MINUTE = 1 * 60 * 1000;
 function fetchcurrentPrice() {
   let symbol = "XAU";
   let currency = "USD";
@@ -35,7 +39,7 @@ function fetchcurrentPrice() {
         Date(localStorage.getItem("currentPrice")),
     );
 
-    // show cached value on screen immediately
+    // show cached value on screen immediately since one minute hasn't passed
     if (localStorage.getItem("currentPrice") != null) {
       const elapsed =
         Date.now() - parseInt(localStorage.getItem("currentPriceLastFetched"));
@@ -63,6 +67,7 @@ function fetchcurrentPrice() {
     return;
   }
 
+  // one minute has passed, fetch live price
   fetch(currentPriceAPI)
     .then((response) => response.json())
     .then((data) => {
@@ -103,13 +108,12 @@ function fetchcurrentPrice() {
       console.error("Error while fetching current price: " + err);
     });
 }
-
 fetchcurrentPrice();
 setInterval(fetchcurrentPrice, ONE_MINUTE);
 
+// get price history every ten minutes
 const TEN_MINUTES = 10 * 60 * 1000;
 function fetchPriceHistory() {
-  // Getting Price History
   let api_key =
     "2a0f00f979858ffb360e58ef8a32b285c055963a1a596a3210590e4fa72dbbd7";
   let groupBy = "day";
@@ -120,6 +124,7 @@ function fetchPriceHistory() {
   const lastFetched = localStorage.getItem("priceHistoryLastFetched");
   const now = Date.now();
 
+  // get cached price, time less than ten minutes
   if (lastFetched && now - parseInt(lastFetched) < TEN_MINUTES) {
     console.log("Using cached price history");
     console.log(
@@ -128,6 +133,7 @@ function fetchPriceHistory() {
     return;
   }
 
+  // get live history price
   fetch(priceHistoryAPI, {
     method: "GET",
     headers: {
@@ -152,6 +158,7 @@ function fetchPriceHistory() {
 fetchPriceHistory();
 setInterval(fetchPriceHistory, TEN_MINUTES);
 
+// create object will all the prices to fill the page
 function calculatedPrices() {
   let currentPrice = Number(localStorage.getItem("currentPrice")).toFixed(2);
   let pricePerGram = currentPrice / 31.1035;
@@ -189,6 +196,7 @@ function calculatedPrices() {
   return result;
 }
 
+// fill page with prices
 function fillPrices(prices, currency = "USD") {
   let barPrice = document.getElementById("barPrice");
   let rashadiPrice = document.getElementById("rashadiPrice");
