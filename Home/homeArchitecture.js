@@ -197,6 +197,7 @@ function buildPrices() {
   };
 }
 
+// fill page with prices
 function fillPrices(prices, currency = "USD") {
   const p = prices[currency];
   document.getElementById("barPrice").innerHTML =
