@@ -1,434 +1,507 @@
-function displayDiff(newPrice, prevPrice) {
-  let changeOfPrice = document.getElementById("changeOfPrice");
-  let diff = newPrice - prevPrice;
-  let percent = ((diff / prevPrice) * 100).toFixed(2);
-  if (diff > 0) {
-    changeOfPrice.style.color = "green";
-    changeOfPrice.style.borderRadius = "20px";
-    changeOfPrice.style.backgroundColor = "#eaf3de";
-    changeOfPrice.style.padding = "5px";
-    changeOfPrice.style.margin = "10px";
-    changeOfPrice.style.fontSize = "medium";
-    changeOfPrice.innerText = `▲ ${percent}%  (+${Number(diff).toFixed(2)})`;
-  } else {
-    changeOfPrice.style.color = "red";
-    changeOfPrice.style.borderRadius = "20px";
-    changeOfPrice.style.backgroundColor = "#f3dede";
-    changeOfPrice.style.padding = "5px";
-    changeOfPrice.style.margin = "10px";
-    changeOfPrice.style.fontSize = "medium";
-    changeOfPrice.innerText = `▼ ${percent}%  (${Number(diff).toFixed(2)})`;
-  }
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const ONE_MINUTE = 60_000;
+const TEN_MINUTES = 600_000;
+const JOD_RATE = 0.71;
+const OZ_TO_GRAM = 31.1035;
+
+const API = {
+  currentPrice: (symbol, currency) =>
+    `https://api.gold-api.com/price/${symbol}/${currency}`,
+  priceHistory: (symbol, groupBy, start, end) =>
+    `https://api.gold-api.com/history?symbol=${symbol}&groupBy=${groupBy}&startTimestamp=${start}&endTimestamp=${end}`,
+  priceHistoryKey:
+    "1db841db85376b834cf4cf079a180c7e88abcc10f2893648c9f12dc13273d4f3",
+  news: "https://newsdata.io/api/1/latest?apikey=pub_8cdfe34522554af9bab8604d4a8294f9&q=economy OR politics&language=en",
+};
+
+const CACHE_KEYS = {
+  currentPrice: "currentPrice",
+  currentPriceLastFetch: "currentPriceLastFetched",
+  currentPriceUpdatedAt: "currentPriceUpdatedAt",
+  priceHistory: "priceHistory",
+  priceHistoryLastFetch: "priceHistoryLastFetched",
+  news: "news",
+  newsTime: "newsTime",
+};
+
+// ─── Cache helpers ────────────────────────────────────────────────────────────
+
+const cache = {
+  get: (key) => localStorage.getItem(key),
+  set: (key, value) =>
+    localStorage.setItem(
+      key,
+      typeof value === "object" ? JSON.stringify(value) : value,
+    ),
+  getJSON: (key) => {
+    try {
+      return JSON.parse(localStorage.getItem(key));
+    } catch {
+      return null;
+    }
+  },
+  isStale: (key, ttl) => {
+    const t = parseInt(localStorage.getItem(key));
+    return !t || Date.now() - t >= ttl;
+  },
+};
+
+// ─── Relative time ────────────────────────────────────────────────────────────
+
+function relativeTime(fromTimestamp) {
+  const elapsed = Date.now() - parseInt(fromTimestamp);
+  const seconds = Math.floor(elapsed / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  return seconds < 60
+    ? rtf.format(-seconds, "second")
+    : rtf.format(-minutes, "minute");
 }
-const ONE_MINUTE = 1 * 60 * 1000;
 
-function fetchcurrentPrice() {
-  let symbol = "XAU";
-  let currency = "USD";
-  let currentPriceAPI = `https://api.gold-api.com/price/${symbol}/${currency}`;
-  const lastFetched = localStorage.getItem("currentPriceLastFetched");
-  const now = Date.now();
+// ─── Price difference display ─────────────────────────────────────────────────
 
-  if (lastFetched && now - parseInt(lastFetched) < ONE_MINUTE) {
-    console.log(
-      "Using cached current price: " +
-        Date(localStorage.getItem("currentPrice")),
-    );
+function displayDiff(newPrice, prevPrice) {
+  const el = document.getElementById("changeOfPrice");
+  const diff = newPrice - prevPrice;
+  const percent = ((diff / prevPrice) * 100).toFixed(2);
+  const rising = diff > 0;
 
-    // show cached value on screen immediately
-    if (localStorage.getItem("currentPrice") != null) {
-      const elapsed =
-        Date.now() - parseInt(localStorage.getItem("currentPriceLastFetched"));
-      const seconds = Math.floor(elapsed / 1000);
-      const minutes = Math.floor(seconds / 60);
+  Object.assign(el.style, {
+    color: rising ? "#4ade80" : "#f87171",
+    backgroundColor: rising ? "rgba(74,222,128,0.1)" : "rgba(248,113,113,0.1)",
+    border: rising
+      ? "1px solid rgba(74,222,128,0.25)"
+      : "1px solid rgba(248,113,113,0.25)",
+    borderRadius: "20px",
+    padding: "5px 14px",
+    margin: "4px 0",
+    fontSize: "13px",
+    letterSpacing: "0.06em",
+  });
 
-      const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-      const timeAgo =
-        seconds < 60
-          ? rtf.format(-seconds, "second")
-          : rtf.format(-minutes, "minute");
-      let currentPriceCard = document.getElementById("currentPriceCard");
-      currentPriceCard.style.color = "#ced04e";
-      currentPriceCard.style.fontSize = "2.4rem";
-      currentPriceCard.innerHTML =
-        `${Number(localStorage.getItem("currentPrice")).toFixed(2)} <small> $ / oz (31.1g)</small>` +
-        `<br><small>Last Updated ${timeAgo}</small>`;
-    }
-    if (localStorage.getItem("priceHistory") != null) {
-      let priceHist = JSON.parse(localStorage.getItem("priceHistory"));
-      let newPrice = priceHist[priceHist.length - 1]["max_price"];
-      let prevPrice = priceHist[priceHist.length - 2]["max_price"];
-      displayDiff(newPrice, prevPrice);
-    }
+  el.innerText = rising
+    ? `▲ ${percent}%  (+${Number(diff).toFixed(2)})`
+    : `▼ ${percent}%  (${Number(diff).toFixed(2)})`;
+}
+
+function updateDiffFromHistory(historyArray) {
+  if (!Array.isArray(historyArray) || historyArray.length < 2) return;
+  const len = historyArray.length;
+  const newPrice = historyArray[len - 1]?.max_price;
+  const prevPrice = historyArray[len - 2]?.max_price;
+  if (newPrice == null || prevPrice == null) return;
+  displayDiff(newPrice, prevPrice);
+}
+
+// ─── Current Price ────────────────────────────────────────────────────────────
+
+function renderCurrentPrice() {
+  const price = cache.get(CACHE_KEYS.currentPrice);
+  if (!price) return;
+
+  const timeAgo = relativeTime(cache.get(CACHE_KEYS.currentPriceLastFetch));
+  const el = document.getElementById("currentPriceCard");
+
+  el.innerHTML = `${Number(price).toFixed(2)} <small>$ / oz<br>Updated ${timeAgo}</small>`;
+}
+
+async function fetchCurrentPrice() {
+  if (!cache.isStale(CACHE_KEYS.currentPriceLastFetch, ONE_MINUTE)) {
+    console.log("Using cached current price");
+    renderCurrentPrice();
+    updateDiffFromHistory(cache.getJSON(CACHE_KEYS.priceHistory));
     return;
   }
 
-  fetch(currentPriceAPI)
-    .then((response) => response.json())
-    .then((data) => {
-      localStorage.setItem("currentPrice", JSON.stringify(data["price"]));
-      localStorage.setItem(
-        "currentPriceUpdatedAt",
-        JSON.stringify(data["updatedAt"]),
-      );
-      localStorage.setItem("currentPriceLastFetched", Date.now());
+  try {
+    const res = await fetch(API.currentPrice("XAU", "USD"));
+    const data = await res.json();
 
-      // show fresh value on screen after saving
-      if (localStorage.getItem("currentPrice") != null) {
-        const elapsed =
-          Date.now() -
-          parseInt(localStorage.getItem("currentPriceLastFetched"));
-        const seconds = Math.floor(elapsed / 1000);
-        const minutes = Math.floor(seconds / 60);
+    cache.set(CACHE_KEYS.currentPrice, data.price);
+    cache.set(CACHE_KEYS.currentPriceUpdatedAt, data.updatedAt);
+    cache.set(CACHE_KEYS.currentPriceLastFetch, Date.now());
 
-        const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-        const timeAgo =
-          seconds < 60
-            ? rtf.format(-seconds, "second")
-            : rtf.format(-minutes, "minute");
-
-        let currentPriceCard = document.getElementById("currentPriceCard");
-        currentPriceCard.innerHTML =
-          `${Number(localStorage.getItem("currentPrice")).toFixed(2)}<small> $ / oz (31.1g)</small>` +
-          `<br><small>Last Updated ${timeAgo}</small>`;
-      }
-      if (localStorage.getItem("priceHistory") != null) {
-        let priceHist = JSON.parse(localStorage.getItem("priceHistory"));
-        let newPrice = priceHist[priceHist.length - 1]["max_price"];
-        let prevPrice = priceHist[priceHist.length - 2]["max_price"];
-        displayDiff(newPrice, prevPrice);
-      }
-    })
-    .catch((err) => {
-      console.error("Error while fetching current price: " + err);
-    });
+    renderCurrentPrice();
+    updateDiffFromHistory(cache.getJSON(CACHE_KEYS.priceHistory));
+  } catch (err) {
+    console.error("Error fetching current price:", err);
+  }
 }
 
-fetchcurrentPrice();
-setInterval(fetchcurrentPrice, ONE_MINUTE);
+// ─── Price History ────────────────────────────────────────────────────────────
 
-const TEN_MINUTES = 10 * 60 * 1000;
-function fetchPriceHistory() {
-  // Getting Price History
-  let api_key =
-    "2a0f00f979858ffb360e58ef8a32b285c055963a1a596a3210590e4fa72dbbd7";
-  let groupBy = "day";
-  let symbol = "XAU";
+async function fetchPriceHistory() {
+  if (!cache.isStale(CACHE_KEYS.priceHistoryLastFetch, TEN_MINUTES)) {
+    console.log("Using cached price history");
+    return;
+  }
+
   const endTimestamp = Math.floor(Date.now() / 1000);
   const startTimestamp = endTimestamp - 20 * 24 * 60 * 60;
-  let priceHistoryAPI = `https://api.gold-api.com/history?symbol=${symbol}&groupBy=${groupBy}&startTimestamp=${startTimestamp}&endTimestamp=${endTimestamp}`;
-  const lastFetched = localStorage.getItem("priceHistoryLastFetched");
-  const now = Date.now();
 
-  if (lastFetched && now - parseInt(lastFetched) < TEN_MINUTES) {
-    console.log("Using cached price history");
-    console.log(
-      `Using the previously fetched data ${localStorage.getItem("priceHistoryLastFetched")}`,
+  try {
+    const res = await fetch(
+      API.priceHistory("XAU", "day", startTimestamp, endTimestamp),
+      {
+        headers: {
+          "x-api-key": API.priceHistoryKey,
+          "Content-Type": "application/json",
+        },
+      },
     );
-    return;
+    const data = await res.json();
+
+    cache.set(CACHE_KEYS.priceHistory, data);
+    cache.set(CACHE_KEYS.priceHistoryLastFetch, Date.now());
+    console.log("Fetched fresh price history");
+  } catch (err) {
+    console.error("Error fetching price history:", err);
   }
-
-  fetch(priceHistoryAPI, {
-    method: "GET",
-    headers: {
-      "x-api-key": `${api_key}`,
-      "Content-Type": "application/json",
-    },
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      localStorage.setItem("priceHistory", JSON.stringify(data));
-      localStorage.setItem("priceHistoryLastFetched", now.toString());
-      console.log(
-        `New data is just fetched ${localStorage.getItem("priceHistoryLastFetched")}`,
-      );
-    })
-    .catch((err) => {
-      console.error(
-        "Error while fetching price history - func fetchPriceHistory: " + err,
-      );
-    });
 }
-fetchPriceHistory();
-setInterval(fetchPriceHistory, TEN_MINUTES);
 
-function calculatedPrices() {
-  let currentPrice = Number(localStorage.getItem("currentPrice")).toFixed(2);
-  let pricePerGram = currentPrice / 31.1035;
-  let priceHistoryUS = JSON.parse(localStorage.getItem("priceHistory"));
-  let priceHistoryJO = JSON.parse(localStorage.getItem("priceHistory")).map(
-    (obj) => ({
-      day: obj["day"],
-      max_price: Number(obj["max_price"]) * 0.71,
-    }),
-  );
+// ─── Calculated prices ────────────────────────────────────────────────────────
 
-  let result = {
+function buildPrices() {
+  const currentPrice = Number(cache.get(CACHE_KEYS.currentPrice));
+  const pricePerGram = currentPrice / OZ_TO_GRAM;
+  const priceHistoryUS = cache.getJSON(CACHE_KEYS.priceHistory);
+  const priceHistoryJO = priceHistoryUS.map(({ day, max_price }) => ({
+    day,
+    max_price: Number(max_price) * JOD_RATE,
+  }));
+
+  const fmt = (val, sym) => `${val.toFixed(2)} ${sym}`;
+
+  return {
     USD: {
-      current: currentPrice + " $",
+      current: fmt(currentPrice, "$"),
       priceHistory: priceHistoryUS,
-      per24k: pricePerGram.toFixed(2) + " $",
-      per21k: (pricePerGram * (21 / 24)).toFixed(2) + " $",
-      per18k: (pricePerGram * (18 / 24)).toFixed(2) + " $",
-      bar: (pricePerGram * 10).toFixed(2) + " $",
-      rashadi: (pricePerGram * 7.216 * (21.6 / 24)).toFixed(2) + " $",
-      english: (pricePerGram * 7.9881 * (22 / 24)).toFixed(2) + " $",
+      per24k: fmt(pricePerGram, "$"),
+      per21k: fmt(pricePerGram * (21 / 24), "$"),
+      per18k: fmt(pricePerGram * (18 / 24), "$"),
+      bar: fmt(pricePerGram * 10, "$"),
+      rashadi: fmt(pricePerGram * 7.216 * (21.6 / 24), "$"),
+      english: fmt(pricePerGram * 7.9881 * (22 / 24), "$"),
     },
     JOD: {
-      current: (currentPrice * 0.71).toFixed(2) + " JD",
+      current: fmt(currentPrice * JOD_RATE, "JD"),
       priceHistory: priceHistoryJO,
-      per24k: (pricePerGram * 0.71).toFixed(2) + " JD",
-      per21k: (pricePerGram * (21 / 24) * 0.71).toFixed(2) + " JD",
-      per18k: (pricePerGram * (18 / 24) * 0.71).toFixed(2) + " JD",
-      bar: (pricePerGram * 10 * 0.71).toFixed(2) + " JD",
-      rashadi: (pricePerGram * 7.216 * (21.6 / 24) * 0.71).toFixed(2) + " JD",
-      english: (pricePerGram * 7.9881 * (22 / 24) * 0.71).toFixed(2) + " JD",
+      per24k: fmt(pricePerGram * JOD_RATE, "JD"),
+      per21k: fmt(pricePerGram * (21 / 24) * JOD_RATE, "JD"),
+      per18k: fmt(pricePerGram * (18 / 24) * JOD_RATE, "JD"),
+      bar: fmt(pricePerGram * 10 * JOD_RATE, "JD"),
+      rashadi: fmt(pricePerGram * 7.216 * (21.6 / 24) * JOD_RATE, "JD"),
+      english: fmt(pricePerGram * 7.9881 * (22 / 24) * JOD_RATE, "JD"),
     },
   };
-  console.log("inside calculatedPricess func: " + result["USD"].priceHistory);
-  return result;
 }
 
 function fillPrices(prices, currency = "USD") {
-  let barPrice = document.getElementById("barPrice");
-  let rashadiPrice = document.getElementById("rashadiPrice");
-  let englishPrice = document.getElementById("EnglishPrice");
-  let twentyFourPrice = document.getElementById("twentyFourPrice");
-  let twentyOnePrice = document.getElementById("twentyOnePrice");
-  let eighteenPrice = document.getElementById("eighteenPrice");
-
-  barPrice.innerHTML = `${prices[currency].bar} <br><small>24 karat - 10g </small>`;
-  rashadiPrice.innerHTML = `${prices[currency].rashadi} <br> <small>21.6 karat - 7.216g</small>`;
-  englishPrice.innerHTML = `${prices[currency].english} <br><small>22 karat - 7.9881g</small>`;
-  twentyFourPrice.innerHTML = `${prices[currency].per24k} <small>/ g</small>`;
-  twentyOnePrice.innerHTML = `${prices[currency].per21k} <small>/ g</small>`;
-  eighteenPrice.innerHTML = `${prices[currency].per18k} <small>/ g</small>`;
-  console.log("inside fillPrices func - works fine!");
+  const p = prices[currency];
+  document.getElementById("barPrice").innerHTML =
+    `${p.bar} <br><small>24 karat - 10g</small>`;
+  document.getElementById("rashadiPrice").innerHTML =
+    `${p.rashadi} <br><small>21.6 karat - 7.216g</small>`;
+  document.getElementById("EnglishPrice").innerHTML =
+    `${p.english} <br><small>22 karat - 7.9881g</small>`;
+  document.getElementById("twentyFourPrice").innerHTML =
+    `${p.per24k} <small>/ g</small>`;
+  document.getElementById("twentyOnePrice").innerHTML =
+    `${p.per21k} <small>/ g</small>`;
+  document.getElementById("eighteenPrice").innerHTML =
+    `${p.per18k} <small>/ g</small>`;
 }
-fillPrices(calculatedPrices());
 
-// creating the chart
-const chart = echarts.init(document.getElementById("chart"));
+// ─── Chart.js instance ────────────────────────────────────────────────────────
+
+let chartInstance = null; // holds the single Chart.js instance
+
+/**
+ * Build the Chart.js nested config and render (or update) the chart.
+ *
+ * Config breakdown
+ * ──────────────────────────────────────────────────────────────────
+ * type: "line"
+ *
+ * data
+ *   datasets[0]           — max-price area line
+ *
+ * options
+ *   responsive: true      — let Chart.js resize with the canvas wrap
+ *   maintainAspectRatio: false — height controlled by CSS, not ratio
+ *
+ *   interaction           — unified cross-hair tooltip
+ *
+ *   plugins
+ *     legend              — hidden (single series)
+ *     tooltip             — custom dark-gold themed tooltip
+ *       callbacks
+ *         title           — format date label
+ *         label           — format price value
+ *
+ *   scales
+ *     x (time scale)
+ *       type: "time"      — parses ISO date strings automatically
+ *       time.unit         — "day"
+ *       ticks             — styled to match design
+ *       grid              — hidden vertical lines
+ *     y (linear scale)
+ *       min / max         — ±200 buffer auto-computed
+ *       ticks             — styled
+ *       grid              — dashed horizontal lines
+ *
+ *   elements
+ *     line                — smooth cubic tension, gold stroke
+ *     point               — small gold circles, larger on hover
+ */
 function renderChart(historyData, currency = "USD") {
-  const sortedData = [...historyData].reverse();
-  const days = sortedData.map((item) => {
-    const date = new Date(item.day);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  });
-  const prices = sortedData.map((item) => Number(item.max_price).toFixed(2));
-  const option = {
-    backgroundColor: "#070505",
-    title: {
-      text: `Prices the past 20 days - ${currency}/oz`,
-      textStyle: {
-        color: "#ced04f",
-        fontFamily: "Segoe UI",
-        fontSize: 14,
-      },
+  // API returns newest-first; reverse to chronological order
+  const sorted = [...historyData].reverse();
+
+  // Chart.js time-scale expects { x: ISO-string, y: number }
+  const dataPoints = sorted.map(({ day, max_price }) => ({
+    x: day,
+    y: Number(max_price).toFixed(2),
+  }));
+
+  const currencySymbol = currency === "USD" ? "$" : "JD";
+
+  // ── Gradient fill ──────────────────────────────────────────────
+  const canvas = document.getElementById("chart");
+  const ctx = canvas.getContext("2d");
+  const grad = ctx.createLinearGradient(
+    0,
+    0,
+    0,
+    canvas.parentElement.clientHeight || 340,
+  );
+  grad.addColorStop(0, "rgba(212, 136, 43, 0.30)");
+  grad.addColorStop(0.6, "rgba(201, 168, 76, 0.08)");
+  grad.addColorStop(1, "rgba(201, 168, 76, 0.00)");
+
+  // ── Update chart title ─────────────────────────────────────────
+  document.getElementById("chartTitle").textContent =
+    `Prices the past 20 days — ${currency} / oz`;
+
+  // ── Dataset definition ────────────────────────────────────────
+  const dataset = {
+    label: `Gold Price (${currency}/oz)`,
+    data: dataPoints,
+    // Line styling
+    borderColor: "#ced04f",
+    borderWidth: 2.5,
+    tension: 0.4, // cubic bezier smoothing
+    // Area fill
+    fill: true,
+    backgroundColor: grad,
+    // Point styling
+    pointRadius: 4,
+    pointHoverRadius: 7,
+    pointBackgroundColor: "#ced04f",
+    pointBorderColor: "#080608",
+    pointBorderWidth: 2,
+    pointHoverBackgroundColor: "#f5e49c",
+    pointHoverBorderColor: "#080608",
+    pointHoverBorderWidth: 2,
+  };
+
+  // ── Full Chart.js nested config object ────────────────────────
+  const config = {
+    type: "line",
+
+    data: {
+      datasets: [dataset],
     },
-    tooltip: {
-      trigger: "axis",
-      backgroundColor: "#1e2330",
-      borderColor: "#b8b5af",
-      borderWidth: 1,
-      textStyle: { color: "#f5f5f7" },
-      formatter: function (params) {
-        const p = params[0];
-        return `${p.axisValue}<br/>Price: ${p.data}`;
+
+    options: {
+      responsive: true,
+      maintainAspectRatio: false, // height governed by .chart-canvas-wrap CSS
+
+      interaction: {
+        mode: "index", // snap tooltip to nearest x-index
+        intersect: false,
       },
-    },
-    xAxis: {
-      type: "category",
-      data: days,
-      axisLine: { lineStyle: { color: "#414450" } },
-      axisLabel: { color: "#6b7280", fontSize: 11 },
-      splitLine: { show: false },
-    },
-    yAxis: {
-      type: "value",
-      min: function (value) {
-        return Math.floor((value.min - 200) / 100) * 100;
-      },
-      max: function (value) {
-        return Math.ceil((value.max + 200) / 100) * 100;
-      },
-      axisLine: { lineStyle: { color: "#414450" } },
-      axisLabel: { color: "#6b7280", fontSize: 11 },
-      splitLine: { lineStyle: { color: "#414450", type: "dashed" } },
-    },
-    series: [
-      {
-        name: "Max Price",
-        type: "line",
-        data: prices,
-        smooth: true,
-        symbol: "circle",
-        symbolSize: 6,
-        lineStyle: { color: "#ced04f", width: 2 },
-        itemStyle: { color: "#ced04f" },
-        areaStyle: {
-          color: {
-            type: "linear",
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: "rgba(239, 159, 39, 0.3)" },
-              { offset: 1, color: "rgba(239, 159, 39, 0)" },
-            ],
+
+      plugins: {
+        legend: {
+          display: false, // single series — no legend needed
+        },
+
+        tooltip: {
+          enabled: true,
+          backgroundColor: "#1a1720",
+          borderColor: "rgba(201,168,76,0.35)",
+          borderWidth: 1,
+          padding: { x: 14, y: 10 },
+          titleColor: "#8a6e2f",
+          titleFont: {
+            family: "'Montserrat', sans-serif",
+            size: 10,
+            weight: "600",
+          },
+          titleSpacing: 4,
+          bodyColor: "#e8cc80",
+          bodyFont: {
+            family: "'Cormorant Garamond', Georgia, serif",
+            size: 17,
+            weight: "600",
+          },
+          bodySpacing: 4,
+          cornerRadius: 10,
+          displayColors: false,
+          caretSize: 5,
+
+          callbacks: {
+            title(items) {
+              // Format ISO date → "Apr 12"
+              const raw = items[0]?.parsed?.x;
+              if (!raw) return "";
+              return new Date(raw).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              });
+            },
+            label(item) {
+              const val = Number(item.parsed.y).toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              });
+              return `${currencySymbol} ${val} / oz`;
+            },
           },
         },
+      }, // end plugins
+
+      scales: {
+        x: {
+          type: "time",
+          time: {
+            unit: "day",
+            tooltipFormat: "yyyy-MM-dd",
+            displayFormats: {
+              day: "MMM d",
+            },
+          },
+          grid: {
+            display: false, // no vertical grid lines
+          },
+          border: {
+            color: "rgba(65,68,80,0.5)",
+          },
+          ticks: {
+            color: "#6b7280",
+            font: { family: "'Montserrat', sans-serif", size: 10 },
+            maxRotation: 0,
+            maxTicksLimit: 8,
+          },
+        },
+
+        y: {
+          position: "left",
+          grid: {
+            color: "rgba(65,68,80,0.4)",
+            lineWidth: 1,
+          },
+          border: {
+            dash: [4, 4],
+            color: "transparent",
+          },
+          ticks: {
+            color: "#6b7280",
+            font: { family: "'Montserrat', sans-serif", size: 10 },
+            // Auto-pad min/max by ±200 then round to nearest 100
+            callback(value) {
+              return value.toLocaleString("en-US");
+            },
+          },
+          // Add breathing room around the data range
+          afterDataLimits(scale) {
+            const padding = 200;
+            scale.min = Math.floor((scale.min - padding) / 100) * 100;
+            scale.max = Math.ceil((scale.max + padding) / 100) * 100;
+          },
+        },
+      }, // end scales
+
+      elements: {
+        line: {
+          borderCapStyle: "round",
+          borderJoinStyle: "round",
+        },
       },
-    ],
-  };
-  chart.setOption(option);
-}
-renderChart(JSON.parse(localStorage.getItem("priceHistory")));
+    }, // end options
+  }; // end config
 
-// modifying currency based on click
-let pricecardmain = document.getElementById("pricecardmain");
-pricecardmain.addEventListener("click", (event) => {
-  let target = event.target;
-  let result = calculatedPrices();
-  let currentPriceCard = document.getElementById("currentPriceCard");
-  let usCurrency = document.getElementById("usCurrency");
-  let joCurrency = document.getElementById("joCurrency");
-
-  if (target.name === "usCurrency") {
-    usCurrency.classList.add("clicked");
-    joCurrency.classList.remove("clicked");
-    //changing current price
-    const elapsed =
-      Date.now() - parseInt(localStorage.getItem("currentPriceLastFetched"));
-    const seconds = Math.floor(elapsed / 1000);
-    const minutes = Math.floor(seconds / 60);
-
-    const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-    const timeAgo =
-      seconds < 60
-        ? rtf.format(-seconds, "second")
-        : rtf.format(-minutes, "minute");
-    currentPriceCard.innerHTML =
-      `${result["USD"].current} <small> / oz (31.1g)</small>` +
-      `<br><small>Last Updated ${timeAgo}</small>`;
-
-    // changing price difference
-    let priceHist = result["USD"].priceHistory;
-    let newPrice = priceHist[priceHist.length - 1]["max_price"];
-    let prevPrice = priceHist[priceHist.length - 2]["max_price"];
-    displayDiff(newPrice, prevPrice);
-
-    // refilling the prices
-    fillPrices(calculatedPrices(), (currency = "USD"));
-
-    // recreating the chart
-    renderChart(priceHist, "USD");
-  } else if (target.name === "joCurrency") {
-    joCurrency.classList.add("clicked");
-    usCurrency.classList.remove("clicked");
-    //changing current price
-    const elapsed =
-      Date.now() - parseInt(localStorage.getItem("currentPriceLastFetched"));
-    const seconds = Math.floor(elapsed / 1000);
-    const minutes = Math.floor(seconds / 60);
-
-    const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-    const timeAgo =
-      seconds < 60
-        ? rtf.format(-seconds, "second")
-        : rtf.format(-minutes, "minute");
-
-    currentPriceCard.innerHTML =
-      `${result["JOD"].current} <small> / oz (31.1g)</small>` +
-      `<br><small>Last Updated ${timeAgo}</small>`;
-
-    // changing price difference
-    let priceHist = result["JOD"].priceHistory;
-    let newPrice = priceHist[priceHist.length - 1]["max_price"];
-    let prevPrice = priceHist[priceHist.length - 2]["max_price"];
-    displayDiff(newPrice, prevPrice);
-
-    // refilling the prices
-    fillPrices(calculatedPrices(), (currency = "JOD"));
-
-    // recreating the chart
-    renderChart(priceHist, "JOD");
+  // ── Create or update ──────────────────────────────────────────
+  if (chartInstance) {
+    // Swap dataset and re-render without destroying the instance
+    chartInstance.data.datasets[0] = dataset;
+    chartInstance.options = config.options;
+    chartInstance.update("active");
+  } else {
+    chartInstance = new Chart(ctx, config);
   }
+}
+
+// ─── Currency switcher ────────────────────────────────────────────────────────
+
+function switchCurrency(currency) {
+  const prices = buildPrices();
+  const timeAgo = relativeTime(cache.get(CACHE_KEYS.currentPriceLastFetch));
+
+  const priceCard = document.getElementById("currentPriceCard");
+  const usBtnEl = document.getElementById("usCurrency");
+  const joBtnEl = document.getElementById("joCurrency");
+  const isUSD = currency === "USD";
+
+  usBtnEl.classList.toggle("clicked", isUSD);
+  joBtnEl.classList.toggle("clicked", !isUSD);
+
+  priceCard.innerHTML = `${prices[currency].current} <small>/ oz<br>Updated ${timeAgo}</small>`;
+
+  const hist = prices[currency].priceHistory;
+  updateDiffFromHistory(hist);
+  fillPrices(prices, currency);
+  renderChart(hist, currency);
+}
+
+document.getElementById("pricecardmain").addEventListener("click", (e) => {
+  const { name } = e.target;
+  if (name === "usCurrency") switchCurrency("USD");
+  else if (name === "joCurrency") switchCurrency("JOD");
 });
 
-let news = document.getElementById("news");
-
-let savednews = JSON.parse(localStorage.getItem("news")) || [];
-let lastFetch = parseInt(localStorage.getItem("newsTime"));
-
-let now = Date.now();
-
-// ⏱️ 10 minutes = 600000 ms
-if (savednews.length > 0 && lastFetch && now - lastFetch < 600000) {
-  displayNews(savednews);
-} else {
-  fetch(
-    "https://newsdata.io/api/1/latest?apikey=pub_8cdfe34522554af9bab8604d4a8294f9&q=economy OR politics&language=en",
-  )
-    .then((res) => res.json())
-    .then((data) => {
-      let articles = data.results.slice(0, 4);
-
-      localStorage.setItem("news", JSON.stringify(articles));
-      localStorage.setItem("newsTime", now);
-
-      displayNews(articles);
-    })
-    .catch(() => {
-      console.log("API Error");
-
-      // fallback
-      if (savednews.length > 0) {
-        displayNews(savednews);
-      }
-    });
-}
+// ─── News ─────────────────────────────────────────────────────────────────────
 
 function displayNews(articles) {
-  news.innerHTML = ""; // clear old slides
+  const newsEl = document.getElementById("news");
+  newsEl.innerHTML = "";
 
   articles.forEach((article) => {
-    let div = document.createElement("div");
-    div.classList.add("swiper-slide");
+    const slide = document.createElement("div");
+    slide.classList.add("swiper-slide");
+    slide.innerHTML = `
+      <div class="content">
+        <h3><span class="lable">Latest News</span>${article.title}</h3>
+      </div>`;
 
-    div.innerHTML = `
-            <div class="content">
-                <h3> <label class="lable"> Latest News | </label> ${article.title}</h3>
-            </div>
-        `;
+    if (article.link) {
+      slide.addEventListener("click", () =>
+        window.open(article.link, "_blank"),
+      );
+    }
 
-    // make slide clickable
-    div.addEventListener("click", () => {
-      if (article.link) {
-        window.open(article.link, "_blank");
-      }
-    });
-
-    news.appendChild(div);
+    newsEl.appendChild(slide);
   });
 
-  new Swiper(".swiper", {
+  new Swiper(".news-swiper", {
     loop: true,
     slidesPerView: "auto",
-    spaceBetween: 50,
+    spaceBetween: 0,
     speed: 4000,
-
-    autoplay: {
-      delay: 4000,
-      disableOnInteraction: false,
-    },
-
-    pagination: {
-      el: ".swiper-pagination",
-      clickable: true,
-    },
-
+    autoplay: { delay: 4000, disableOnInteraction: false },
+    pagination: { el: ".swiper-pagination", clickable: true },
     navigation: {
       nextEl: ".swiper-button-next",
       prevEl: ".swiper-button-prev",
@@ -436,40 +509,85 @@ function displayNews(articles) {
   });
 }
 
-const the_animation = document.querySelectorAll(".animation");
-const observer = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("scroll-animation");
-      } else {
-        entry.target.classList.remove("scroll-animation");
-      }
+async function loadNews() {
+  const saved = cache.getJSON(CACHE_KEYS.news) || [];
+  const lastFetch = parseInt(cache.get(CACHE_KEYS.newsTime));
+
+  if (saved.length > 0 && lastFetch && Date.now() - lastFetch < TEN_MINUTES) {
+    displayNews(saved);
+    return;
+  }
+
+  try {
+    const res = await fetch(API.news);
+    const data = await res.json();
+    const articles = data.results.slice(0, 4);
+
+    cache.set(CACHE_KEYS.news, articles);
+    cache.set(CACHE_KEYS.newsTime, Date.now());
+
+    displayNews(articles);
+  } catch {
+    console.log("News API error – falling back to cache");
+    if (saved.length > 0) displayNews(saved);
+  }
+}
+
+// ─── Scroll animations ────────────────────────────────────────────────────────
+
+function initScrollAnimations() {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(({ target, isIntersecting }) => {
+        target.classList.toggle("scroll-animation", isIntersecting);
+      });
+    },
+    { threshold: 0.25 },
+  );
+
+  document.querySelectorAll(".animation").forEach((el) => observer.observe(el));
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
+function initAuth() {
+  const authLink = document.getElementById("authLink");
+  const user = sessionStorage.getItem("currentUser");
+
+  if (user) {
+    authLink.innerText = "Logout";
+    authLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      sessionStorage.removeItem("currentUser");
+      window.location.href = "../Login and Register Pages/Login.html";
     });
-  },
-  { threshold: 0.25 },
-);
-//
-for (let i = 0; i < the_animation.length; i++) {
-  const elements = the_animation[i];
-
-  observer.observe(elements);
+  } else {
+    authLink.innerText = "Login";
+    authLink.href = "../Login and Register Pages/Login.html";
+  }
 }
 
-let authLink = document.getElementById("authLink");
-let user = sessionStorage.getItem("currentUser");
+// ─── Boot ─────────────────────────────────────────────────────────────────────
 
-if (user) {
-  //  مسجل دخول
-  authLink.innerText = "Logout";
+async function init() {
+  initAuth();
+  initScrollAnimations();
+  loadNews();
 
-  authLink.addEventListener("click", (e) => {
-    e.preventDefault(); //  يمنع الانتقال
-    sessionStorage.removeItem("currentUser");
-    window.location.href = "../Login and Register Pages/Login.html";
-  });
-} else {
-  // مش مسجل
-  authLink.innerText = "Login";
-  authLink.href = "../Login and Register Pages/Login.html"; //  هون عادي
+  // History must resolve first so updateDiffFromHistory has data available
+  await fetchPriceHistory();
+  await fetchCurrentPrice(); // safe to call now — history is in cache
+
+  // Initial render after data is ready
+  const history = cache.getJSON(CACHE_KEYS.priceHistory);
+  if (history) {
+    fillPrices(buildPrices());
+    renderChart(history); // Chart.js render
+  }
+
+  // Poll every minute / 10 minutes
+  setInterval(fetchCurrentPrice, ONE_MINUTE);
+  setInterval(fetchPriceHistory, TEN_MINUTES);
 }
+
+init();
