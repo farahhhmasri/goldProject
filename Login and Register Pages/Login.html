@@ -168,7 +168,7 @@ const user = users.find(u =>
           emailError.textContent = "Invalid email format";
         } else if (user) {
           sessionStorage.setItem("currentUser", JSON.stringify(user));
-          window.location.href = "../Home/homePage.html";
+          window.location.href = "../Home/index.html";
         } else {
           alert("Invalid email or password");
         }
